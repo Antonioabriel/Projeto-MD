@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Upload CSV</title>
+</head>
+<body>
+    <h1>Envie um CSV</h1>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.as_p }}
+        
+        <button type="submit">Enviar</button>
+    </form>
+    <!-- Botão extrair do PDF: leva para a nova página de upload de arquivo único -->
+    <form action="{% url 'mesclar' %}" method="get">
+        <button type="submit">extrair do PDF</button>
+    </form>
+    <!-- Botão Clusters: leva para a nova página de Clusters de arquivo único -->
+    <form action="{% url 'clusters' %}" method="get">
+    <button type="submit">Clusters</button>
+    </form>
+
+</body>
+</html>
