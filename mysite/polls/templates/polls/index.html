@@ -12,13 +12,21 @@
         <form method="post" enctype="multipart/form-data">
             {% csrf_token %}
             
-            <label for="id_cota" class="custom-label">Selecionar Arquivo de Cotas</label>
-            <input type="file" id="id_cota" name="cota" class="inputfile">
+            <div class="form-group">
+
+                <label for="id_cota" class="custom-label">Selecionar Arquivo de Cotas</label>
+                <input type="file" id="id_cota" name="cota" class="inputfile">
+                <label for="id_cota" class="file-upload-button">Escolher arquivo de Cotas</label>
+            </div>
             
             <br>
             
-            <label for="id_superior_pesquisa" class="custom-label">Selecionar Superior Pesquisa</label>
-            <input type="file" id="id_superior_pesquisa" name="superior_pesquisa" class="inputfile">
+            <div class="form-group">
+
+                <label for="id_superior_pesquisa" class="custom-label">Selecionar Superior Pesquisa</label>
+                <input type="file" id="id_superior_pesquisa" name="superior_pesquisa" class="inputfile">
+                <label for="id_superior_pesquisa" class="file-upload-button">Escolher arquivo Superior Pesquisa</label>
+            </div>
             
             <br><br>
             <button type="submit">Enviar arquivos</button>
