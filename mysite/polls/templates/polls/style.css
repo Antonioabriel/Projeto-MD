@@ -6,32 +6,40 @@ html {
     box-sizing: inherit;
 }
 
-/* Body e Tipografia */
+/* Cores do IFF:
+   Verde Principal: #006633
+   Vermelho: #CC0000
+   Branco: #FFFFFF
+   Cinza Claro: #f8f9fa (para formulários e outros elementos de destaque)
+*/
+
+/* Body e Tipografia - AGORA COM O FUNDO VERDE DO IFF */
 body {
     font-family: 'Roboto', 'Helvetica Neue', Arial, sans-serif;
     margin: 0;
     padding: 20px;
-    background-color: #f8f9fa;
-    color: #3c4043;
+    background-color: #006633; /* FUNDO DO SITE TODO É O VERDE DO IFF */
+    color: #FFFFFF; /* COR DO TEXTO PADRÃO DO SITE É BRANCA */
     line-height: 1.6;
     display: flex;
     justify-content: center;
-    align-items: flex-start; /* Alinha o conteúdo ao topo */
+    align-items: flex-start;
     min-height: 100vh;
 }
 
 .container {
     width: 100%;
     max-width: 850px;
-    background-color: #ffffff;
+    background-color: #ffffff; /* Fundo do container principal é branco para o conteúdo se destacar */
     padding: 30px;
     border-radius: 12px;
-    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25); /* Sombra mais forte para o container branco */
+    color: #3c4043; /* Cor do texto dentro do container é cinza escuro para contraste no branco */
 }
 
 /* Títulos */
 h1 {
-    color: #1a73e8;
+    color: #CC0000; /* Mantém o vermelho do IFF para o título principal */
     text-align: center;
     margin-bottom: 40px;
     font-size: 2.2rem;
@@ -40,8 +48,8 @@ h1 {
 }
 
 h2 {
-    color: #1a73e8;
-    border-bottom: 2px solid #e0e0e0;
+    color: #006633; /* Mudar para o verde principal para se destacar no fundo branco do container */
+    border-bottom: 2px solid #e0e0e0; /* Borda cinza clara para contraste no branco */
     padding-bottom: 10px;
     margin-top: 50px;
     margin-bottom: 25px;
@@ -51,7 +59,7 @@ h2 {
 
 /* Formulários */
 form {
-    background-color: #fcfcfc;
+    background-color: #fcfcfc; /* Fundo dos formulários mantém-se claro */
     padding: 25px;
     border-radius: 10px;
     border: 1px solid #eee;
@@ -59,12 +67,19 @@ form {
     margin-bottom: 30px;
 }
 
+/* Estilo para o wrapper do grupo de formulário (label + input + button) */
+.form-group {
+    margin-bottom: 20px;
+    display: block;
+    width: 100%;
+}
+
 /* Labels customizadas para inputs */
 .custom-label {
-    display: block; /* Garante que o label ocupe uma linha inteira */
-    margin-bottom: 8px; /* Espaçamento menor entre label e botão de upload */
+    display: block;
+    margin-bottom: 8px;
     font-weight: bold;
-    color: #5f6368;
+    color: #5f6368; /* Mantido em cinza para contraste com fundo branco do form */
     font-size: 1.1rem;
 }
 
@@ -83,16 +98,15 @@ form {
     font-size: 1rem;
     font-weight: 600;
     color: #fff;
-    background-color: #6c757d;
-    display: block; /* IMPORTANTE: Faz com que o botão ocupe uma linha inteira */
-    width: fit-content; /* A largura se adapta ao conteúdo do texto */
-    max-width: 100%; /* Garante que não ultrapasse a largura do pai */
+    background-color: #6c757d; /* Mantido neutro, mas ainda combina */
+    display: inline-block;
+    width: fit-content;
+    max-width: 100%;
     padding: 10px 20px;
     border-radius: 5px;
     cursor: pointer;
     transition: background-color 0.3s ease, transform 0.2s ease;
     margin-top: 5px;
-    margin-bottom: 20px; /* Espaço maior abaixo para separar os grupos de upload */
 }
 
 .file-upload-button:hover {
@@ -103,7 +117,7 @@ form {
 /* Acessibilidade: estado de foco para navegação por teclado */
 .inputfile:focus + .file-upload-button,
 .file-upload-button:focus {
-    outline: 2px solid #1a73e8;
+    outline: 2px solid #CC0000; /* Outline com o vermelho do IFF */
     outline-offset: 2px;
 }
 
@@ -122,46 +136,49 @@ button[type="submit"] {
 
 /* Botão primário "Enviar arquivos" */
 form button[type="submit"] {
-    background-color: #1a73e8;
-    display: block; /* IMPORTANTE: Ocupa uma linha inteira e largura total */
+    background-color: #006633; /* Verde do IFF */
+    display: block;
     width: 100%;
-    margin-top: 25px; /* Espaço acima do botão */
+    margin-top: 25px;
 }
 
 form button[type="submit"]:hover {
-    background-color: #1558b0;
+    background-color: #004d26;
     transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 /* Estilos para os formulários de "Extrair dados" e "Clusterização" */
 .action-form {
-    display: flex; /* Usa flexbox para centralizar o botão */
+    display: flex;
     justify-content: center;
     padding: 20px;
-    margin-bottom: 30px; /* Garante espaço abaixo desses formulários também */
+    margin-bottom: 30px;
+    background-color: #fcfcfc; /* Mantenha-os brancos como os outros formulários */
+    border: 1px solid #eee;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
 }
 
 .action-form button {
-    margin: 0; /* Remove margens extras se centralizado por flex */
+    margin: 0;
 }
 
 /* Botão "Extrair dados do edital de Homologação" */
 form[action*="mesclar"] button {
-    background-color: #34a853; /* Verde para esta ação */
+    background-color: #006633; /* Verde do IFF */
 }
 
 form[action*="mesclar"] button:hover {
-    background-color: #278f44;
+    background-color: #004d26;
 }
 
 /* Botão "Clusterização" */
 form[action*="clusters"] button {
-    background-color: #8b5cf6; /* Roxo para esta ação */
+    background-color: #CC0000; /* Vermelho do IFF */
 }
 
 form[action*="clusters"] button:hover {
-    background-color: #7c48e7;
+    background-color: #a60000;
 }
 
 /* Ajustes Responsivos */
@@ -187,15 +204,17 @@ form[action*="clusters"] button:hover {
         margin-bottom: 15px;
     }
 
+    .form-group {
+        margin-bottom: 15px;
+    }
+
     button,
     .file-upload-button {
-        /* Já estão como display: block e width: 100% pelos estilos acima,
-           apenas ajustamos margens para telas menores */
-        margin-bottom: 15px; /* Espaço entre botões empilhados */
+        margin-bottom: 15px;
     }
 
     form button[type="submit"] {
-        margin-bottom: 0; /* O botão de submit principal já tem sua margem tratada pelo margin-top */
+        margin-bottom: 0;
     }
 }
 
