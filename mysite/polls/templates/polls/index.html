@@ -5,20 +5,31 @@
     <title>Upload CSV</title>
 </head>
 <body>
-    <h1>Envie um CSV</h1>
-    <form method="post" enctype="multipart/form-data">
+    <h1>Sistema de Mineração de Dados Educacionais</h1>
+    <h2>Pré-processamento dos dados</h2>
+       <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
-        {{ form.as_p }}
         
-        <button type="submit">Enviar</button>
-    </form>
+        <label for="id_cota" class="custom-label">Selecionar Arquivo de Cotas</label>
+        <input type="file" id="id_cota" name="cota" class="inputfile">
+        
+        <br>
+        
+        <label for="id_superior_pesquisa" class="custom-label">Selecionar Superior Pesquisa</label>
+        <input type="file" id="id_superior_pesquisa" name="superior_pesquisa" class="inputfile">
+        
+        <br><br>
+        <button type="submit">Enviar arquivos</button>
+
     <!-- Botão extrair do PDF: leva para a nova página de upload de arquivo único -->
     <form action="{% url 'mesclar' %}" method="get">
-        <button type="submit">extrair do PDF</button>
+        <button type="submit">Extrair dados do edital de Homologação</button>
     </form>
+
+    <h2>Mineração de dados</h2>
     <!-- Botão Clusters: leva para a nova página de Clusters de arquivo único -->
     <form action="{% url 'clusters' %}" method="get">
-    <button type="submit">Clusters</button>
+    <button type="submit">Clusterização</button>
     </form>
 
 </body>
