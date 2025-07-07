@@ -2,47 +2,41 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <link rel="stylesheet" type="text/css" href="style.css">
     <title>Upload CSV</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
 </head>
 <body>
-        <div class="container">
+    <div class="container">
         <h1>Sistema de Mineração de Dados Educacionais</h1>
-        <h2>Pré-processamento dos dados</h2>
-        <form method="post" enctype="multipart/form-data">
-            {% csrf_token %}
-            
-            <div class="form-group">
 
-                <label for="id_cota" class="custom-label">Selecionar Arquivo de Cotas</label>
-                <input type="file" id="id_cota" name="cota" class="inputfile">
-                <label for="id_cota" class="file-upload-button">Escolher arquivo de Cotas</label>
-            </div>
-            
-            <br>
-            
-            <div class="form-group">
+        <div class="main-sections-wrapper">
 
-                <label for="id_superior_pesquisa" class="custom-label">Selecionar Superior Pesquisa</label>
-                <input type="file" id="id_superior_pesquisa" name="superior_pesquisa" class="inputfile">
-                <label for="id_superior_pesquisa" class="file-upload-button">Escolher arquivo Superior Pesquisa</label>
-            </div>
-            
-            <br><br>
-            <button type="submit">Enviar arquivos</button>
-            
-            <!-- Botão extrair do PDF: leva para a nova página de upload de arquivo único -->
-            <form action="{% url 'mesclar' %}" method="get">
-                <button type="submit">Extrair dados do edital de Homologação</button>
-            </form>
-            
-            <h2>Mineração de dados</h2>
-            <!-- Botão Clusters: leva para a nova página de Clusters de arquivo único -->
-            <form action="{% url 'clusters' %}" method="get">
-                <button type="submit">Clusterização</button>
-            </form>
-            
-        </div>
-        </body>
-        </html>
-        
+            <div class="section-block">
+                <h2>Pré-processamento dos dados</h2>
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="id_cota" class="custom-label">Selecionar Arquivo de Cotas</label>
+                        <input type="file" id="id_cota" name="cota" class="inputfile">
+                        <label for="id_cota" class="file-upload-button">Escolher arquivo de Cotas</label>
+                    </div>
+                    <div class="form-group">
+                        <label for="id_superior_pesquisa" class="custom-label">Selecionar Superior Pesquisa</label>
+                        <input type="file" id="id_superior_pesquisa" name="superior_pesquisa" class="inputfile">
+                        <label for="id_superior_pesquisa" class="file-upload-button">Escolher arquivo Superior Pesquisa</label>
+                    </div>
+                    <button type="submit">Enviar arquivos</button>
+                </form>
+
+                <form action="{% url 'mesclar' %}" method="get" class="action-form">
+                    <button type="submit">Extrair dados do edital de Homologação</button>
+                </form>
+            </div><div class="section-block">
+                <h2>Mineração de dados</h2>
+                <form action="{% url 'clusters' %}" method="get" class="action-form">
+                    <button type="submit">Clusterização</button>
+                </form>
+            </div></div></div>
+</body>
+</html>

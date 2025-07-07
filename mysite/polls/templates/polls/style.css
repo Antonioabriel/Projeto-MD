@@ -6,37 +6,65 @@ html {
     box-sizing: inherit;
 }
 
+/* Cores do IFF:
+   Verde Principal: #006633
+   Vermelho: #CC0000
+   Branco: #FFFFFF
+   Cinza Claro: #f8f9fa (para formulários e outros elementos de destaque)
+*/
 
-/* Body e Tipografia - FUNDO VERDE E CONTEÚDO ALINHADO À ESQUERDA */
+/* Body e Tipografia - FUNDO CLARO E CONTEÚDO ALINHADO À ESQUERDA */
 body {
     font-family: 'Roboto', 'Helvetica Neue', Arial, sans-serif;
     margin: 0;
-    padding: 30px; /* Mantém o espaçamento nas bordas */
-    background-color: #F5F5F5; /* Fundo do site todo é o verde do IFF */
-    color: #FFFFFF; /* Cor do texto padrão do site é branca */
+    padding: 30px;
+    background-color: #F5F5F5;
+    color: #3c4043; /* Cor do texto padrão do site agora é CINZA ESCURO */
     line-height: 1.6;
-    display: block; /* Garante que não há flexbox centralizando */
+    display: block;
     min-height: 100vh;
-    /* justify-content e align-items removidos, pois display é block */
 }
 
-/* O .container é para limitar a largura, mas não centralizar */
+/* O .container é para limitar a largura e alinhar à esquerda */
 .container {
     width: 100%;
-    max-width: 850px; /* Limite de largura para o conteúdo principal */
-    background-color: transparent; /* Fundo transparente */
-    padding: 0; /* Removido padding extra */
-    border-radius: 0; /* Removido border-radius */
-    box-shadow: none; /* Removido box-shadow */
-    color: #FFFFFF; /* Garante que o texto dentro dele seja branco */
-    margin: 0; /* ESSENCIAL: Garante que não há margem automática para centralizar */
-    /* Removido margin-right: auto; se estava presente */
+    max-width: 1200px; /* Aumentado para acomodar duas colunas */
+    background-color: transparent;
+    padding: 0;
+    border-radius: 0;
+    box-shadow: none;
+    color: inherit; /* Herda a cor do body (cinza escuro) */
+    margin: 0 auto; /* Mantém centralizado se a tela for muito larga */
+}
+
+/* Wrapper para as seções lado a lado */
+.main-sections-wrapper {
+    display: flex; /* ATIVA FLEXBOX: coloca os itens lado a lado */
+    flex-wrap: wrap; /* Permite que os itens quebrem a linha em telas pequenas */
+    gap: 30px; /* Espaço entre as colunas */
+    justify-content: flex-start; /* Alinha o conteúdo à esquerda dentro do wrapper */
+    align-items: stretch; /* Garante que as colunas tenham a mesma altura */
+    margin-top: 20px;
+}
+
+/* Estilo para cada bloco de seção (Pré-processamento e Mineração) */
+.section-block {
+    flex: 1; /* Faz com que os blocos tentem ocupar o mesmo espaço */
+    min-width: 300px;
+    background-color: #fcfcfc; /* Fundo branco para o bloco inteiro */
+    padding: 25px;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    color: #3c4043; /* Texto dentro do bloco é cinza escuro */
+    display: flex; /* Torna o section-block um contêiner flex */
+    flex-direction: column; /* Organiza os itens internos em coluna (h2, form) */
+    justify-content: flex-start; /* Alinha h2 ao topo do bloco */
 }
 
 /* Títulos */
 h1 {
     color: #CC0000;
-    text-align: left; /* ALINHADO À ESQUERDA */
+    text-align: left;
     margin-bottom: 40px;
     font-size: 2.2rem;
     letter-spacing: -0.5px;
@@ -44,26 +72,26 @@ h1 {
 }
 
 h2 {
-    color: #006633; /* Mantém branco para visibilidade no fundo verde */
-    border-bottom: 2px solid rgba(255, 255, 255, 0.5); /* Borda branca transparente */
+    color: #006633; /* Verde do IFF */
+    border-bottom: 2px solid #e0e0e0; /* Borda cinza clara para fundo claro */
     padding-bottom: 10px;
-    margin-top: 50px;
-    margin-bottom: 25px;
+    margin-top: 0; /* Alinhado ao topo do section-block */
+    margin-bottom: 25px; /* Espaço abaixo do h2 */
     font-size: 1.6rem;
     font-weight: 600;
 }
 
-/* Formulários */
-form {
-    background-color: #fcfcfc; /* Fundo dos formulários mantém-se claro */
-    padding: 25px;
-    border-radius: 10px;
-    border: 1px solid #eee;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-    margin-bottom: 30px;
-    max-width: 600px; /* Limita a largura dos formulários */
-    margin-left: 0; /* ESSENCIAL: Garante alinhamento à esquerda */
-    margin-right: 0; /* ESSENCIAL: Garante que não há margem automática para centralizar */
+/* Formulários (gerais, dentro de section-block) */
+.section-block form {
+    background-color: transparent;
+    padding: 0;
+    border-radius: 0;
+    border: none;
+    box-shadow: none;
+    margin-bottom: 20px; /* Espaço entre formulários (se houver mais de um) */
+    max-width: none;
+    margin-left: 0;
+    margin-right: 0;
 }
 
 /* Estilo para o wrapper do grupo de formulário (label + input + button) */
@@ -78,7 +106,7 @@ form {
     display: block;
     margin-bottom: 8px;
     font-weight: bold;
-    color: #5f6368; /* Cinza escuro para ser visível no fundo claro do form */
+    color: #5f6368;
     font-size: 1.1rem;
 }
 
@@ -109,14 +137,14 @@ form {
 }
 
 .file-upload-button:hover {
-    background-color: #004d26; /* Verde mais escuro no hover */
+    background-color: #004d26;
     transform: translateY(-2px);
 }
 
 /* Acessibilidade: estado de foco para navegação por teclado */
 .inputfile:focus + .file-upload-button,
 .file-upload-button:focus {
-    outline: 2px solid #CC0000; /* Outline com o vermelho do IFF */
+    outline: 2px solid #CC0000;
     outline-offset: 2px;
 }
 
@@ -148,52 +176,85 @@ form button[type="submit"]:hover {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
-/* Estilos para os formulários de "Extrair dados" e "Clusterização" */
-.action-form {
-    display: block; /* Mudar para block para que não use flexbox */
-    padding: 20px;
-    margin-top: 40px;
-    margin-bottom: 30px;
-    background-color: #fcfcfc;
-    border: 1px solid #eee;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-    max-width: 600px; /* Limita a largura */
-    margin-left: 0; /* ALINHADO À ESQUERDA */
-    margin-right: 0; /* ESSENCIAL: Garante que não há margem automática para centralizar */
+/* ATENÇÃO AQUI: Estilos para o formulário de "Clusterização" específico */
+form[action*="clusters"] {
+    flex-grow: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    margin-bottom: 0;
+    margin-top: 20px;
+    padding: 0;
 }
 
-.action-form button {
-    margin: 0; /* Remove margens extras */
-    display: block; /* Faz o botão ocupar 100% da largura do formulário */
+/* ATENÇÃO AQUI: Aumentando a largura do botão de Clusterização */
+form[action*="clusters"] button {
+    margin: 0;
+    width: 80%; /* Aumenta a largura do botão para 80% do seu contêiner (o formulário) */
+    /* Você pode experimentar com valores como 70%, 90% ou um valor fixo como 250px */
+    display: block; /* Garante que o botão se comporte como um bloco para a largura funcionar */
+}
+
+
+/* Estilos para o formulário de "Extrair dados" (que não é o de Clusterização) */
+.action-form:not([action*="clusters"]) {
+    display: block;
+    padding: 0;
+    margin-top: 20px;
+    margin-bottom: 0;
+    background-color: transparent;
+    border: none;
+    box-shadow: none;
+    max-width: none;
+    margin-left: 0;
+    margin-right: 0;
+}
+
+.action-form:not([action*="clusters"]) button {
+    margin: 0;
+    display: block;
     width: 100%;
 }
 
+
 /* Botão "Extrair dados do edital de Homologação" */
 form[action*="mesclar"] button {
-    background-color: #006633; /* Verde do IFF */
+    background-color: #006633;
 }
 
 form[action*="mesclar"] button:hover {
     background-color: #004d26;
 }
 
-/* Botão "Clusterização" */
+/* Botão "Clusterização" (Mantém as cores específicas) */
 form[action*="clusters"] button {
-    background-color: #CC0000; /* Vermelho do IFF */
+    background-color: #CC0000;
 }
 
 form[action*="clusters"] button:hover {
     background-color: #a60000;
 }
 
-/* Ajustes Responsivos */
+
+/* AJUSTES RESPONSIVOS */
 @media (max-width: 768px) {
     body {
-        padding: 15px; /* Reduz padding em telas menores */
+        padding: 15px;
     }
 
     .container {
-        max-width: 100%; /* Container pode ocupar 100% em telas menores */
+        max-width: 100%;
+    }
+
+    .main-sections-wrapper {
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .section-block {
+        padding: 20px;
+        min-width: unset;
     }
 
     h1 {
@@ -203,7 +264,7 @@ form[action*="clusters"] button:hover {
 
     h2 {
         font-size: 1.4rem;
-        margin-top: 30px;
+        margin-top: 0;
         margin-bottom: 15px;
     }
 
@@ -221,9 +282,25 @@ form[action*="clusters"] button:hover {
     }
 
     form, .action-form {
-        padding: 20px; /* Ajusta padding dos forms em telas menores */
-        max-width: 100%; /* Forms ocupam 100% em telas menores */
+        padding: 0;
+        max-width: 100%;
         border-radius: 8px;
+    }
+    .action-form {
+        margin-top: 15px;
+    }
+
+    /* Em telas pequenas, o botão Clusterização também deve ter largura total e não centralizar no espaço todo */
+    form[action*="clusters"] {
+        justify-content: flex-start; /* Alinha ao topo/inicio */
+        align-items: flex-start; /* Alinha à esquerda */
+        min-height: unset; /* Remove altura mínima */
+        flex-grow: 0; /* Não cresce em telas pequenas */
+        margin-bottom: 15px; /* Adiciona espaçamento após o formulário */
+    }
+    form[action*="clusters"] button {
+        width: 100%; /* Ocupa 100% da largura em telas pequenas */
+        display: block;
     }
 }
 
@@ -232,9 +309,8 @@ form[action*="clusters"] button:hover {
         padding: 10px;
     }
 
-    form, .action-form {
+    .section-block {
         padding: 15px;
-        border-radius: 6px;
     }
 
     h1 {
@@ -244,6 +320,7 @@ form[action*="clusters"] button:hover {
 
     h2 {
         font-size: 1.2rem;
-        margin-top: 25px;
+        margin-top: 0;
+        margin-bottom: 10px;
     }
 }
