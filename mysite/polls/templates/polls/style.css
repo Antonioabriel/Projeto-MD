@@ -1,0 +1,225 @@
+/* Universal Box Sizing */
+html {
+    box-sizing: border-box;
+}
+*, *::before, *::after {
+    box-sizing: inherit;
+}
+
+/* Body e Tipografia */
+body {
+    font-family: 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+    margin: 0;
+    padding: 20px;
+    background-color: #f8f9fa;
+    color: #3c4043;
+    line-height: 1.6;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start; /* Alinha o conteúdo ao topo */
+    min-height: 100vh;
+}
+
+.container {
+    width: 100%;
+    max-width: 850px;
+    background-color: #ffffff;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+}
+
+/* Títulos */
+h1 {
+    color: #1a73e8;
+    text-align: center;
+    margin-bottom: 40px;
+    font-size: 2.2rem;
+    letter-spacing: -0.5px;
+    font-weight: 700;
+}
+
+h2 {
+    color: #1a73e8;
+    border-bottom: 2px solid #e0e0e0;
+    padding-bottom: 10px;
+    margin-top: 50px;
+    margin-bottom: 25px;
+    font-size: 1.6rem;
+    font-weight: 600;
+}
+
+/* Formulários */
+form {
+    background-color: #fcfcfc;
+    padding: 25px;
+    border-radius: 10px;
+    border: 1px solid #eee;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    margin-bottom: 30px;
+}
+
+/* Labels customizadas para inputs */
+.custom-label {
+    display: block; /* Garante que o label ocupe uma linha inteira */
+    margin-bottom: 8px; /* Espaçamento menor entre label e botão de upload */
+    font-weight: bold;
+    color: #5f6368;
+    font-size: 1.1rem;
+}
+
+/* Esconde o input de arquivo padrão */
+.inputfile {
+    width: 0.1px;
+    height: 0.1px;
+    opacity: 0;
+    overflow: hidden;
+    position: absolute;
+    z-index: -1;
+}
+
+/* Estiliza o label associado ao input de arquivo para parecer um botão */
+.file-upload-button {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #fff;
+    background-color: #6c757d;
+    display: block; /* IMPORTANTE: Faz com que o botão ocupe uma linha inteira */
+    width: fit-content; /* A largura se adapta ao conteúdo do texto */
+    max-width: 100%; /* Garante que não ultrapasse a largura do pai */
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    margin-top: 5px;
+    margin-bottom: 20px; /* Espaço maior abaixo para separar os grupos de upload */
+}
+
+.file-upload-button:hover {
+    background-color: #5a6268;
+    transform: translateY(-2px);
+}
+
+/* Acessibilidade: estado de foco para navegação por teclado */
+.inputfile:focus + .file-upload-button,
+.file-upload-button:focus {
+    outline: 2px solid #1a73e8;
+    outline-offset: 2px;
+}
+
+/* Estilos Gerais dos Botões */
+button[type="submit"] {
+    color: white;
+    padding: 12px 25px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1.05rem;
+    font-weight: 600;
+    transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+/* Botão primário "Enviar arquivos" */
+form button[type="submit"] {
+    background-color: #1a73e8;
+    display: block; /* IMPORTANTE: Ocupa uma linha inteira e largura total */
+    width: 100%;
+    margin-top: 25px; /* Espaço acima do botão */
+}
+
+form button[type="submit"]:hover {
+    background-color: #1558b0;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Estilos para os formulários de "Extrair dados" e "Clusterização" */
+.action-form {
+    display: flex; /* Usa flexbox para centralizar o botão */
+    justify-content: center;
+    padding: 20px;
+    margin-bottom: 30px; /* Garante espaço abaixo desses formulários também */
+}
+
+.action-form button {
+    margin: 0; /* Remove margens extras se centralizado por flex */
+}
+
+/* Botão "Extrair dados do edital de Homologação" */
+form[action*="mesclar"] button {
+    background-color: #34a853; /* Verde para esta ação */
+}
+
+form[action*="mesclar"] button:hover {
+    background-color: #278f44;
+}
+
+/* Botão "Clusterização" */
+form[action*="clusters"] button {
+    background-color: #8b5cf6; /* Roxo para esta ação */
+}
+
+form[action*="clusters"] button:hover {
+    background-color: #7c48e7;
+}
+
+/* Ajustes Responsivos */
+@media (max-width: 768px) {
+    body {
+        padding: 15px;
+        align-items: flex-start;
+    }
+
+    .container {
+        padding: 20px;
+        border-radius: 8px;
+    }
+
+    h1 {
+        font-size: 1.8rem;
+        margin-bottom: 30px;
+    }
+
+    h2 {
+        font-size: 1.4rem;
+        margin-top: 30px;
+        margin-bottom: 15px;
+    }
+
+    button,
+    .file-upload-button {
+        /* Já estão como display: block e width: 100% pelos estilos acima,
+           apenas ajustamos margens para telas menores */
+        margin-bottom: 15px; /* Espaço entre botões empilhados */
+    }
+
+    form button[type="submit"] {
+        margin-bottom: 0; /* O botão de submit principal já tem sua margem tratada pelo margin-top */
+    }
+}
+
+@media (max-width: 480px) {
+    body {
+        padding: 10px;
+    }
+
+    .container {
+        padding: 15px;
+        border-radius: 6px;
+    }
+
+    h1 {
+        font-size: 1.6rem;
+        margin-bottom: 25px;
+    }
+
+    h2 {
+        font-size: 1.2rem;
+        margin-top: 25px;
+    }
+
+    form {
+        padding: 15px;
+    }
+}
