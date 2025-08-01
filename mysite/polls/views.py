@@ -1,11 +1,13 @@
 import pandas as pd
-import io
+import io, os
 from django.shortcuts import render
 from django.http import HttpResponse
 from .forms import UploadFileForm
-from .process import tratar_csv,extrair_dados_pdf,gerar_cluster_excel
+from .process import tratar_csv,extrair_dados_pdf,gerar_cluster_excel,gerar_grafico_cor_raca,gerar_tabela_cor_forma_ingresso,gerar_grafico_forma_ingresso
 from openpyxl import Workbook
 from io import BytesIO
+from django.conf import settings
+import matplotlib.pyplot as plt
 
 def index(request):
     if request.method == 'POST':
@@ -14,14 +16,26 @@ def index(request):
         if form.is_valid():
             cota_file = form.cleaned_data['cota']
             superior_file = form.cleaned_data['superior_pesquisa']
-
+            
 
             try:
-                resultado = tratar_csv(
-                    cota_file,
-                    superior_file
-                )
+                # Trata os arquivos
+                resultado = tratar_csv(cota_file, superior_file)
 
+                # Garante que a pasta temp exista
+                temp_dir = os.path.join(settings.MEDIA_ROOT, 'temp')
+                os.makedirs(temp_dir, exist_ok=True)
+
+                # Caminho onde será salvo o arquivo
+                temp_path = os.path.join(temp_dir, 'resultado.csv')
+
+                # Salva o DataFrame como CSV temporariamente
+                resultado.to_csv(temp_path, index=False, encoding='latin1')
+
+                # (Opcional) Salva o caminho na sessão para reutilizar depois
+                request.session['caminho_csv_resultado'] = temp_path
+
+                # Também retorna para download, se quiser manter essa funcionalidade
                 output = io.StringIO()
                 resultado.to_csv(output, index=False, encoding='latin1')
                 output.seek(0)
@@ -36,6 +50,7 @@ def index(request):
         form = UploadFileForm()
 
     return render(request, 'polls/index.html', {'form': form})
+
 
 def mesclar(request):
     return render(request, 'polls/mesclar.html')
@@ -87,3 +102,29 @@ def clusters_view(request):
             return render(request, 'polls/clusters.html', {'mensagem': f'Erro: {str(e)}'})
 
     return render(request, 'polls/clusters.html')
+
+
+def gerar_grafico_view(request):
+    caminho = os.path.join(settings.MEDIA_ROOT, 'temp', 'resultado.csv')
+
+    if not os.path.exists(caminho):
+        return HttpResponse("Arquivo não encontrado. Envie os dados primeiro.", status=404)
+
+    df = pd.read_csv(caminho, encoding='latin1')
+
+    acao = request.GET.get('grafico')  # Ex: ?grafico=cor_raca
+
+    if acao == 'cor_raca':
+        imagem_base64 = gerar_grafico_cor_raca(df)
+        return render(request, 'polls/index.html', {'imagem': imagem_base64})
+
+    elif acao == 'forma_ingresso':
+        imagem_base64 = gerar_grafico_forma_ingresso(df)
+        return render(request, 'polls/index.html', {'imagem': imagem_base64})
+
+    elif acao == 'tabela_cor_ingresso':
+        tabela_html = gerar_tabela_cor_forma_ingresso(df)
+        return render(request, 'polls/index.html', {'tabela_html': tabela_html})
+
+    else:
+        return HttpResponse("Gráfico não reconhecido.", status=400)

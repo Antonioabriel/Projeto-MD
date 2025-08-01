@@ -5,6 +5,39 @@
     <title>Upload CSV</title>
     <link rel="stylesheet" type="text/css" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        .botoes {
+            margin-bottom: 20px;
+        }
+
+        .botoes form {
+            display: inline-block;
+            margin-right: 10px;
+        }
+
+        img {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .tabela-container {
+            overflow-x: auto;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        table, th, td {
+            border: 1px solid #aaa;
+            padding: 8px;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
@@ -25,7 +58,9 @@
                         <label for="id_superior_pesquisa" class="custom-label">Selecionar Superior Pesquisa</label>
                         <input type="file" id="id_superior_pesquisa" name="superior_pesquisa" class="inputfile">
                         <label for="id_superior_pesquisa" class="file-upload-button">Escolher arquivo Superior Pesquisa</label>
+                        
                     </div>
+
                     <button type="submit">Enviar arquivos</button>
                 </form>
 
@@ -37,6 +72,35 @@
                 <form action="{% url 'clusters' %}" method="get" class="action-form">
                     <button type="submit">Clusterização</button>
                 </form>
+
+        <h1>Visualização de Gráficos</h1>
+
+        <div class="botoes">
+            <form method="get" action="{% url 'gerar_grafico' %}">
+                <input type="hidden" name="grafico" value="cor_raca">
+                <button type="submit">Gráfico: Cor ou Raça</button>
+            </form>
+
+            <form method="get" action="{% url 'gerar_grafico' %}">
+                <input type="hidden" name="grafico" value="forma_ingresso">
+                <button type="submit">Gráfico: Forma de Ingresso</button>
+            </form>
+
+            <form method="get" action="{% url 'gerar_grafico' %}">
+                <input type="hidden" name="grafico" value="tabela_cor_ingresso">
+                <button type="submit">Tabela: Cor x Forma de Ingresso</button>
+            </form>
+        </div>
+
+        {% if imagem %}
+            <img src="data:image/png;base64,{{ imagem }}" alt="Gráfico">
+        {% endif %}
+
+        {% if tabela_html %}
+            <div class="tabela-container">
+                {{ tabela_html|safe }}
+            </div>
+        {% endif %}
             </div></div></div>
 </body>
 </html>

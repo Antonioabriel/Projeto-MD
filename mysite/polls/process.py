@@ -4,8 +4,11 @@ import fitz  # PyMuPDF
 import re
 import numpy as np
 from sklearn.cluster import KMeans
+import matplotlib.pyplot as plt
+import base64
 
-def tratar_csv(cota_file, superior_pesquisa_file,):
+
+def tratar_csv(cota_file, superior_pesquisa_file):
     def read_csv(file):
         file.seek(0)
         try:
@@ -17,17 +20,29 @@ def tratar_csv(cota_file, superior_pesquisa_file,):
     df_cota = read_csv(cota_file)
     df_1 = read_csv(superior_pesquisa_file)
  
-
+    print(df_cota.columns.tolist())
     # Padronizando o nome do arquivo classificados e Cota
     df_cota.rename(columns={'Número de Inscrição': 'numero_inscricao'}, inplace=True)
+    
+    print("df_1:")
+    print(df_1['numero_inscricao'].dtype)
+    print(df_1['numero_inscricao'].head())
 
+    print("\ndf_cota:")
+    print(df_cota['numero_inscricao'].dtype)
+    print(df_cota['numero_inscricao'].head())
 
+    inscricoes_comuns = set(df_1['numero_inscricao']) & set(df_cota['numero_inscricao'])
+    print(f"Quantidade de inscrições em comum: {len(inscricoes_comuns)}")
+    
     # Retirando as escrições dublicadas
     df_1 = df_1.drop_duplicates(subset=['numero_inscricao'], keep=False)
     print(df_cota.columns.tolist())
-
+    
     # Passando as colunas Forma de Ingresso para base do Superior tendo o número de inscrição como parametro
     df_1 = df_1.merge(df_cota[['numero_inscricao', 'Forma de Ingresso']], on='numero_inscricao', how='left')
+    print(df_1['Forma de Ingresso'].unique())
+    print(df_cota['Forma de Ingresso'].unique())
 
 
     # Verificar se o candidato tem uma inscrição duplicada
@@ -146,13 +161,23 @@ def tratar_csv(cota_file, superior_pesquisa_file,):
     df_1['escola_publica'] = df_1['colegio_fundamental'].str.contains(padrao_publica, case=False, na=False)\
                                     .map({True: 'publica', False: 'privada'})
 
+    print(df_1['Forma de Ingresso'].unique())
+    print(df_cota['Forma de Ingresso'].unique())
+    print("Iniciando substituição de caracteres especiais...")
+    print("Colunas do tipo object:", df_1.select_dtypes(include='object').columns.tolist())
   # Substituições de acentos e caracteres especiais
-    df_1.replace({
+    substituicoes = {
         'Ã': 'A', 'Á': 'A', 'Â': 'A', 'Ó': 'O', 'Í': 'I', 'í': 'i',
         'º': '', 'ª': '', '\.': '', '–': '', '´': '', '`': '', '^': '', '"': '',
         'ó': 'o', 'ô': 'o', 'Ô': 'O', 'á': 'a', 'â': 'a', 'ç': 'c',
         'ã': 'a', 'é': 'e', 'ê': 'e', 'à': 'a', 'ú': 'u', 'Ú': 'U'
-    }, regex=True, inplace=True)
+    }
+
+    for col in df_1.select_dtypes(include='object').columns:
+        try:
+            df_1[col] = df_1[col].astype(str).replace(substituicoes, regex=True)
+        except Exception as e:
+            print(f"Erro na coluna '{col}': {e}")
 
     # Remover qualquer texto entre parênteses (com parênteses)
     df_1.replace(r"\([^()]*\)", "", regex=True, inplace=True)
@@ -186,10 +211,27 @@ def tratar_csv(cota_file, superior_pesquisa_file,):
 
     df_1['ano_do_processo'] = df_1['processo_seletivo'].apply(extrair_ano_processo)
     
+    df_1['corouraca'] = df_1['cor_ou_raca'].replace({
+        'Branco': 'Branco',
+        'Pardo': 'Pardo',
+        'Amarela': 'Pardo',
+        'Indigena': 'Pardo',
+        'Preto': 'Negro',
+        'Negro': 'Negro',
+
+    })
+
+    df_1['atividade_remunerada'] = df_1['atividade_remunerada'].replace({
+        'Sim, em tempo parcial (cerca de 20 horas semanais)': 'Sim, em tempo integral (cerca de 30 horas semanais)',
+
+    })
+
+
+
     #Preencendo a idade do aluno
     df_1['idade'] = df_1['ano_do_processo'] - df_1['ano']
 
-    df_1 = df_1[df_1['ano_do_processo'] == 2018]
+    df_1 = df_1[df_1['ano_do_processo'] == 2019]
 
     bins = [16, 20, 25, 30, 35, 40]
     labels = ['17-20', '21-25', '26-30', '31-35', '36-40']
@@ -201,7 +243,7 @@ def tratar_csv(cota_file, superior_pesquisa_file,):
     'data_nascimento_candidato', 'ano', 'idade', 'processo_seletivo', 'declarado_pcd',
     'requerimento_concorrencia_cota_pcd', 'deferimento_concorrencia_cota_pcd', 'inscricao_isenta',
     'negro_pardo_indigena', 'fontes_iff', 'regiao_oportunidades', 'costume_computador',
-    'duplicado','morador_de_campos'
+    'duplicado','morador_de_campos','cor_ou_raca'
     ], inplace=True)
 
 
@@ -310,3 +352,73 @@ def gerar_cluster_excel(df_1):
             linhas.append(['All', col, f"{media:.2f}"])
 
     return pd.DataFrame(linhas, columns=['cluster', 'variavel', 'valor'])
+
+
+
+def gerar_grafico_cor_raca(df):
+    counts = df['corouraca'].value_counts()
+
+    def autopct_generator(limit):
+        def inner_autopct(pct):
+            return ('%1.1f%%' % pct) if pct > limit else ''
+        return inner_autopct
+
+    limite_pct = 1
+    porcentagens = counts / counts.sum() * 100
+    legendas_filtradas = porcentagens[porcentagens > limite_pct].index
+
+    fig, ax = plt.subplots(figsize=(10, 7))
+    counts.plot(
+        kind='pie',
+        autopct=autopct_generator(limite_pct),
+        labels=None,
+        ax=ax
+    )
+    ax.set_title('Distribuição por Cor ou Raça')
+    ax.set_ylabel('')
+    ax.legend(
+        labels=legendas_filtradas,
+        title="Cor ou Raça",
+        bbox_to_anchor=(1, 0, 0.5, 1)
+    )
+    plt.tight_layout()
+
+    return _fig_para_base64(fig)
+
+
+def gerar_grafico_forma_ingresso(df):
+    counts = df['Forma de Ingresso'].value_counts()
+
+    fig, ax = plt.subplots(figsize=(10, 7))
+    counts.plot(
+        kind='pie',
+        autopct='%1.1f%%',
+        labels=None,
+        ax=ax
+    )
+    ax.set_title('Distribuição Forma de Ingresso')
+    ax.set_ylabel('')
+    ax.legend(
+        labels=counts.index,
+        title="Legenda",
+        bbox_to_anchor=(1.02, 0.6)
+    )
+    plt.tight_layout()
+
+    return _fig_para_base64(fig)
+
+
+def gerar_tabela_cor_forma_ingresso(df):
+    tabela = pd.crosstab(df['corouraca'], df['Forma de Ingresso'], normalize=True)
+    tabela = tabela * 100
+    tabela_formatada = tabela.style.format("{:.1f}%")
+    return tabela_formatada.to_html()
+
+
+def _fig_para_base64(fig):
+    buf = io.BytesIO()
+    fig.savefig(buf, format='png')
+    plt.close(fig)
+    buf.seek(0)
+    imagem_base64 = base64.b64encode(buf.read()).decode('utf-8')
+    return imagem_base64
