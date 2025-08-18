@@ -15,12 +15,13 @@ def index(request):
         
         if form.is_valid():
             cota_file = form.cleaned_data['cota']
+            cota2_file = form.cleaned_data['cota2']
             superior_file = form.cleaned_data['superior_pesquisa']
             
 
             try:
                 # Trata os arquivos
-                resultado = tratar_csv(cota_file, superior_file)
+                resultado = tratar_csv(cota_file, superior_file,cota2_file)
 
                 # Garante que a pasta temp exista
                 temp_dir = os.path.join(settings.MEDIA_ROOT, 'temp')

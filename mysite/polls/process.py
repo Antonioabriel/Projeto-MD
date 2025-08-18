@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import base64
 
 
-def tratar_csv(cota_file, superior_pesquisa_file):
+def tratar_csv(cota_file, superior_pesquisa_file,cota2_file):
     def read_csv(file):
         file.seek(0)
         try:
@@ -17,8 +17,14 @@ def tratar_csv(cota_file, superior_pesquisa_file):
             file.seek(0)
             return pd.read_csv(io.TextIOWrapper(file, encoding='latin1'))
 
-    df_cota = read_csv(cota_file)
+    # ✅ Use sua função já existente
+    df_cota1 = extrair_dados_pdf(cota_file)
+    df_cota2 = extrair_dados_pdf(cota2_file)
+
+    # ✅ Ainda é CSV
     df_1 = read_csv(superior_pesquisa_file)
+    df_cota = pd.concat([df_cota1, df_cota2], ignore_index=True)
+
  
     print(df_cota.columns.tolist())
     # Padronizando o nome do arquivo classificados e Cota
@@ -39,6 +45,10 @@ def tratar_csv(cota_file, superior_pesquisa_file):
     df_1 = df_1.drop_duplicates(subset=['numero_inscricao'], keep=False)
     print(df_cota.columns.tolist())
     
+    # Garantir que a coluna 'numero_inscricao' é do mesmo tipo
+    df_1['numero_inscricao'] = df_1['numero_inscricao'].astype(str)
+    df_cota['numero_inscricao'] = df_cota['numero_inscricao'].astype(str)
+
     # Passando as colunas Forma de Ingresso para base do Superior tendo o número de inscrição como parametro
     df_1 = df_1.merge(df_cota[['numero_inscricao', 'Forma de Ingresso']], on='numero_inscricao', how='left')
     print(df_1['Forma de Ingresso'].unique())
@@ -256,7 +266,15 @@ def tratar_csv(cota_file, superior_pesquisa_file):
     df_1 = df_1[~df_1['nome_curso'].isin(cursos_para_excluir)]
 
     df_1.drop(['nome_curso'],axis=1, inplace=True)
-    
+    # Remove espaços
+    df_1['Forma de Ingresso'] = df_1['Forma de Ingresso'].astype(str).str.strip()
+
+    # Converte strings "nan" (texto) para NaN reais
+    df_1['Forma de Ingresso'].replace(['', 'nan', 'NaN', 'None'], pd.NA, inplace=True)
+
+    # Remove linhas com NaN
+    df_1.dropna(subset=['Forma de Ingresso'], inplace=True)
+        
 
     return df_1
 
