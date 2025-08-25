@@ -3,23 +3,31 @@
 <head>
     <meta charset="utf-8">
     <title>Upload CSV</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
 </head>
 <body>
-    <h2>Clusterização</h2>
-    <form method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-        <label>Arquivo para clusterização:</label><br>
-        <input type="file" name="arquivo_cluster" required><br><br>
-        <button type="submit">Enviar</button>
-    </form>
-
-    {% if mensagem %}
+    <div class="container">
+        <h1>Clusterização</h1>
+    <div class="section-block">
+        <form  method="post" enctype="multipart/form-data">
+            <div class="form-group">
+            {% csrf_token %}
+            <label class="custom-label">Arquivo para clusterização:</label><br>
+                <input class="inputfile" type="file" name="arquivo_cluster" id="arquivo_cluster" required>
+                <label for="arquivo_cluster" class="file-upload-button">Escolher arquivo </label>
+            </div>
+            <button type="submit">Enviar</button>
+        </form>
+        
+        {% if mensagem %}
         <p>{{ mensagem }}</p>
-    {% endif %}
-
-    <form action="{% url 'index' %}" method="get" style="margin-top: 20px;">
-        <button type="submit">Voltar</button>
-    </form>
-    
+        {% endif %}
+        
+        <form action="{% url 'index' %}" method="get" style="margin-top: 20px;">
+            <button type="submit">Voltar</button>
+        </form>
+        
+    </div>
+</div>
 </body>
 </html>

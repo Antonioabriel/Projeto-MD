@@ -69,6 +69,7 @@ h1 {
     font-size: 2.2rem;
     letter-spacing: -0.5px;
     font-weight: 700;
+    text-align: center;
 }
 
 h2 {
@@ -323,4 +324,25 @@ form[action*="clusters"] button:hover {
         margin-top: 0;
         margin-bottom: 10px;
     }
+    .btn-secondary {
+        background-color: #6c757d; /* Um cinza neutro */
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+    .btn-secondary:hover {
+        background-color: #5a6268;
+        transform: translateY(-2px);
+}
+
+/* Estilo para a mensagem de feedback (sucesso/erro) */
+    .feedback-message {
+        margin-top: 15px;
+        padding: 10px 15px;
+        border-radius: 5px;
+        background-color: #f8f9fa; /* Fundo cinza claro */
+        border: 1px solid #e0e0e0;
+        color: #3c4043;
+        text-align: center;
+        font-weight: 500;
+} 
 }
