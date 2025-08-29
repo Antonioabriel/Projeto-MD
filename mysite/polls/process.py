@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import base64
 
 
-def tratar_csv(cota_file, superior_pesquisa_file,cota2_file):
+def tratar_csv(superior_pesquisa_file,colunas_selecionadas,Ano_do_processo):
     def read_csv(file):
         file.seek(0)
         try:
@@ -17,42 +17,40 @@ def tratar_csv(cota_file, superior_pesquisa_file,cota2_file):
             file.seek(0)
             return pd.read_csv(io.TextIOWrapper(file, encoding='latin1'))
 
-    # ✅ Use sua função já existente
-    df_cota1 = extrair_dados_pdf(cota_file)
-    df_cota2 = extrair_dados_pdf(cota2_file)
+    
+    # Ainda é CSV
+    df_1 = superior_pesquisa_file
 
-    # ✅ Ainda é CSV
-    df_1 = read_csv(superior_pesquisa_file)
-    df_cota = pd.concat([df_cota1, df_cota2], ignore_index=True)
+
+    # Garante que a coluna e os anos sejam do mesmo tipo (string)
+    df_1 = df_1.dropna(subset=["ano_do_processo"])
+    df_1["ano_do_processo"] = df_1["ano_do_processo"].astype(int).astype(str)
+    
+    Ano_do_processo = [str(ano) for ano in Ano_do_processo]
+    print(Ano_do_processo)
+    print(df_1["ano_do_processo"])
+    df_1 = df_1[df_1["ano_do_processo"].isin(Ano_do_processo)]
 
  
-    print(df_cota.columns.tolist())
+    print(df_1.columns.tolist())
     # Padronizando o nome do arquivo classificados e Cota
-    df_cota.rename(columns={'Número de Inscrição': 'numero_inscricao'}, inplace=True)
+    df_1.rename(columns={'Número de Inscrição': 'numero_inscricao'}, inplace=True)
     
     print("df_1:")
     print(df_1['numero_inscricao'].dtype)
     print(df_1['numero_inscricao'].head())
 
-    print("\ndf_cota:")
-    print(df_cota['numero_inscricao'].dtype)
-    print(df_cota['numero_inscricao'].head())
-
-    inscricoes_comuns = set(df_1['numero_inscricao']) & set(df_cota['numero_inscricao'])
-    print(f"Quantidade de inscrições em comum: {len(inscricoes_comuns)}")
     
     # Retirando as escrições dublicadas
     df_1 = df_1.drop_duplicates(subset=['numero_inscricao'], keep=False)
-    print(df_cota.columns.tolist())
+
     
     # Garantir que a coluna 'numero_inscricao' é do mesmo tipo
     df_1['numero_inscricao'] = df_1['numero_inscricao'].astype(str)
-    df_cota['numero_inscricao'] = df_cota['numero_inscricao'].astype(str)
 
     # Passando as colunas Forma de Ingresso para base do Superior tendo o número de inscrição como parametro
-    df_1 = df_1.merge(df_cota[['numero_inscricao', 'Forma de Ingresso']], on='numero_inscricao', how='left')
     print(df_1['Forma de Ingresso'].unique())
-    print(df_cota['Forma de Ingresso'].unique())
+ 
 
 
     # Verificar se o candidato tem uma inscrição duplicada
@@ -64,21 +62,7 @@ def tratar_csv(cota_file, superior_pesquisa_file,cota2_file):
     df_1 = df_1.astype({'processo_seletivo': 'string'})
     df_1['data_nascimento_candidato'] = pd.to_datetime(df_1['data_nascimento_candidato'], errors='coerce')
 
-    # Renomear colunas para remover números dos nomes
-    df_1.rename(columns={
-        "1_estado_civil": "estado_civil",
-        "2_cor_ou_raca": "cor_ou_raca",
-        "3_periodo_fundamental": "periodo_fundamental",
-        "4_colegio_fundamental": "colegio_fundamental",
-        "4_situacao_superior": "situacao_superior",
-        "5_motivo_escolha_curso": "motivo_escolha_curso",
-        "6_fontes_iff": "fontes_iff",
-        "7_atividade_remunerada": "atividade_remunerada",
-        "8_renda_mensal_familia": "renda_mensal_familia",
-        "9_participacao_economia_familia": "participacao_economia_familia",
-        "10_costume_computador": "costume_computador",
-        "11_regiao_oportunidades": "regiao_oportunidades"
-    }, inplace=True)
+    
 
     #adicionar string vazia para os valores de renda mensal não informadas
     df_1['renda_mensal_familia'].fillna(False)
@@ -112,51 +96,7 @@ def tratar_csv(cota_file, superior_pesquisa_file,cota2_file):
     #Adicionar valor False a linhas vazias na coluna curso
     df_1['nome_curso'].fillna(False)
 
-    # Mapear cursos para suas grandes áreas
-    mapeamentos = {
-        'Arquitetura e Urbanismo': 'CIENCIAS SOCIAIS APLICADAS',
-        'Biologia': 'CIENCIAS BIOLOGICAS',
-        'Cidades e suas Tecnologias': 'CIENCIAS SOCIAIS APLICADAS',
-        'Ciência e Tecnologia dos Alimentos': 'CIENCIAS AGRÁRIAS',
-        'CIENCIAS da Natureza': 'CIENCIAS BIOLOGICAS',
-        'Design Gráfico': 'CIENCIAS SOCIAIS APLICADAS',
-        'Educação Básica e Saberes Pedagógicos na Contemporaneidade': 'CIENCIAS HUMANAS',
-        'Educação, Ambiente e Sustentabilidade': 'CIENCIAS HUMANAS',
-        'Educação Ambiental': 'CIENCIAS HUMANAS',
-        'Educação Física': 'CIENCIAS DA SAUDE',
-        'Engenharia Ambiental': 'ENGENHARIAS',
-        'Engenharia Elétrica': 'ENGENHARIAS',
-        'Engenharia de Computação': 'ENGENHARIAS',
-        'Engenharia de Controle e Automação': 'ENGENHARIAS',
-        'Engenharia Mecânica': 'ENGENHARIAS',
-        'Física': 'CIENCIAS EXATAS E DA TERRA',
-        'Gastronomia': 'CIENCIAS SOCIAIS APLICADAS',
-        'Gestão, Design e Marketing': '',
-        'Geografia': 'CIENCIAS HUMANAS',
-        'História': 'CIENCIAS HUMANAS',
-        'Hotelaria': 'CIENCIAS HUMANAS',
-        'Letras - Português e Literaturas': 'LINGUISTICA, LETRAS E ARTES',
-        'Literatura, Memória Cultural e Sociedade': 'LINGUISTICA, LETRAS E ARTES',
-        'Manutenção Industrial': '',
-        'Matemática': 'CIENCIAS EXATAS E DA TERRA',
-        'Mestrado Profissional em Ensino e suas Tecnologias': 'CIENCIAS HUMANAS',
-        'Mestrado SAEG - Linha de Pesquisa I - Sistemas Aplicados à Engenharia': 'CIENCIAS EXATAS E DA TERRA',
-        'Mestrado SAEG - Linha de Pesquisa II - Sistemas Aplicados à Gestão': 'CIENCIAS EXATAS E DA TERRA',
-        'Práticas Educacionais na Docência do Século XXI': 'CIENCIAS HUMANAS',
-        'Pós-Graduação em Energias e Sustentabilidade': 'ENGENHARIAS',
-        'Música': 'LINGUISTICA, LETRAS E ARTES',
-        'Sistemas de Informação': 'CIENCIAS EXATAS E DA TERRA',
-        'Sistemas de Telecomunicações': 'ENGENHARIAS',
-        'Química': 'CIENCIAS EXATAS E DA TERRA',
-        'Teatro': 'LINGUISTICA, LETRAS E ARTES'
-    }
 
-    # Inicializar coluna
-    df_1['grande_area_do_curso'] = '-'
-
-    # Aplicar mapeamento
-    for curso, area in mapeamentos.items():
-        df_1.loc[df_1['nome_curso'].str.contains(curso, na=False), 'grande_area_do_curso'] = area
 
     # Combinar as diferentes entradas para CAMPOS DOS GOYTACAZES. Atualizar todas as entradas para caixa alta.
     df_1.loc[df_1['cidade_candidato'].str.contains("Campos dos Goytacazes| CAMPOS DOS GOYTACAZES|CAMPOS DOS GOYTACAZES  |CAMPOS DOS GOYTACAZES- RJ|CAMPOS DOS GOYTACAZESALAIR|CAMPOS DOS GOYTACAZES - RJ|DORES DE MACABU ( CAMPOS DOS GOYTACAZES )|SANTA MARIA DE CAMPOS DOS GOYTACAZES|campos dos goytacazes-rj|CAMPOS DOS GOYTACAZES'|CAMPOS DOS GOYTACAZES]|GOITACAZES (CAMPOS DOS GOYTACAZES)|CAMPOS DOS GOYTACAZES L|GOITACAZES (CAMPOS DOS GOYTACAZES)|campos dos goytacazes.|CAMPOS DOS GOYTACAZES- RJ|DORES DE MACABU ( CAMPOS DOS GOYTACAZES )|SANTA MARIA DE CAMPOS DOS GOYTACAZES|campos dos goytacazes-rj|CAMPOS DOS GOYTACAZES'|CAMPOS DOS GOYTACAZES]|GOITACAZES (CAMPOS DOS GOYTACAZES)|CAMPOS DOS GOYTACAZES L|GOITACAZES (CAMPOS DOS GOYTACAZES)|campos dos goytacazes.|CAMPOS DOS GOYTACAZES- RJ|Campos dos Goytacazes, Rio de Janeiro, Brasil|CAMPOS DOS GOYTCAZES|SANTO EDUARDO (CAMPOS DOS GOYTACAZES)|Campos dos Goytacazesr|GOITACAZES (CAMPOS DOS GOYTACAZES)|Campos dos Goytacazes, Rio de Janeiro, Brasil|GOITACAZES (CAMPOS DOS GOYTACAZES)|campos dos goytacazes- RJ|Campos dos Goytacazes, Rio de Janeiro, Brasil|CAMPOS DOS GOYTACAZES]|CAMPOS DOS GOYTACAZES//GUARUS|Campos dos Goytacazesr|GOITACAZES (CAMPOS DOS GOYTACAZES)|campos dos goytacazes- RJ|CAMPOS DOS GOYTACAZESR|CAMPOS DOS GOYTACAZES/RJ|SANTO AMARO DE CAMPOS (CAMPOS DOS GOYTACAZES)|CAMPOS DOS GOYTACAZES/RJ| CAMPOS|CAMPOS DOS GOYTACAZES RJ| CAMPOS DOS GOITACAZES|GOYTACAZES|Goytacazes|goytacazes|Goitacazes|Campos dos|GOYTACAZ|campos dos|CAMPOS.RJ|CAMPOS", case=False, na=False), 'cidade_candidato'] = "CAMPOS DOS GOYTACAZES"
@@ -172,7 +112,7 @@ def tratar_csv(cota_file, superior_pesquisa_file,cota2_file):
                                     .map({True: 'publica', False: 'privada'})
 
     print(df_1['Forma de Ingresso'].unique())
-    print(df_cota['Forma de Ingresso'].unique())
+
     print("Iniciando substituição de caracteres especiais...")
     print("Colunas do tipo object:", df_1.select_dtypes(include='object').columns.tolist())
   # Substituições de acentos e caracteres especiais
@@ -198,30 +138,9 @@ def tratar_csv(cota_file, superior_pesquisa_file,cota2_file):
 
     df_1.drop(['colegio_fundamental'], axis=1, inplace=True)
 
-    #Criar uma coluna para armazenar a idade do canditado no ano que a inscrição foi realizada
-    df_1['idade'] = None
 
-    #Extraindo e tratando o ano de nascimento dos alunos
-    df_1['data_nascimento_candidato'] = df_1['data_nascimento_candidato'].fillna(pd.NaT)
-    df_1 = df_1[(df_1['data_nascimento_candidato'] != '-') & (df_1['data_nascimento_candidato'] != '#N/D')]
-    df_1['data_nascimento_candidato'] = pd.to_datetime(df_1['data_nascimento_candidato'], errors='coerce')
-    df_1 = df_1.dropna(subset=['data_nascimento_candidato'])
-    ano_aluno = pd.DatetimeIndex(df_1['data_nascimento_candidato'])
-    df_1['ano'] = ano_aluno.year
-
-    #Extraindo o ano do processo seletivo
-    import re
-    def extrair_ano_processo(frase):
-        ano = re.search(r'\b\d{4}\b', frase)
-        if ano:
-            return int(ano.group())  # Retorna o ano encontrado como um inteiro
-        else:
-            return None  # Retorna None se nenhum ano for encontrado
-
-
-    df_1['ano_do_processo'] = df_1['processo_seletivo'].apply(extrair_ano_processo)
     
-    df_1['corouraca'] = df_1['cor_ou_raca'].replace({
+    df_1['cor_ou_raca'] = df_1['cor_ou_raca'].replace({
         'Branco': 'Branco',
         'Pardo': 'Pardo',
         'Amarela': 'Pardo',
@@ -237,24 +156,14 @@ def tratar_csv(cota_file, superior_pesquisa_file,cota2_file):
     })
 
 
-
-    #Preencendo a idade do aluno
-    df_1['idade'] = df_1['ano_do_processo'] - df_1['ano']
-
-    df_1 = df_1[df_1['ano_do_processo'] == 2019]
-
-    bins = [16, 20, 25, 30, 35, 40]
-    labels = ['17-20', '21-25', '26-30', '31-35', '36-40']
-    df_1['faixa_etaria'] = pd.cut(df_1['idade'], bins=bins, labels=labels, right=True)
-
     #Excluindo colunas que não seram usadas
-    df_1.drop(columns=[
-    'numero_inscricao', 'ano_do_processo', 'motivo_escolha_curso', 'nome_candidato',
-    'data_nascimento_candidato', 'ano', 'idade', 'processo_seletivo', 'declarado_pcd',
-    'requerimento_concorrencia_cota_pcd', 'deferimento_concorrencia_cota_pcd', 'inscricao_isenta',
-    'negro_pardo_indigena', 'fontes_iff', 'regiao_oportunidades', 'costume_computador',
-    'duplicado','morador_de_campos','cor_ou_raca'
-    ], inplace=True)
+    #df_1.drop(columns=[
+    #'numero_inscricao', 'ano_do_processo', 'motivo_escolha_curso', 'nome_candidato',
+    #'data_nascimento_candidato', 'ano', 'idade', 'processo_seletivo', 'declarado_pcd',
+    #'requerimento_concorrencia_cota_pcd', 'deferimento_concorrencia_cota_pcd', 'inscricao_isenta',
+    #'negro_pardo_indigena', 'fontes_iff', 'regiao_oportunidades', 'costume_computador',
+    #'duplicado','morador_de_campos','cor_ou_raca'
+    #], inplace=True)
 
 
     #Exclindo curso da pós graduação
@@ -274,6 +183,8 @@ def tratar_csv(cota_file, superior_pesquisa_file,cota2_file):
 
     # Remove linhas com NaN
     df_1.dropna(subset=['Forma de Ingresso'], inplace=True)
+
+    df_1 = df_1[colunas_selecionadas]
         
 
     return df_1
@@ -314,7 +225,7 @@ def extrair_dados_pdf(arquivo_pdf):
             else:
                 i += 1
 
-    df = pd.DataFrame(dados, columns=['nome_curso', 'Forma de Ingresso', 'Número de Inscrição', 'Nota', 'Situação'])
+    df = pd.DataFrame(dados, columns=['nome_curso_FI', 'Forma de Ingresso', 'numero_inscricao', 'Nota', 'Situação'])
     df['Nota'] = pd.to_numeric(df['Nota'], errors='coerce')
     return df
 
@@ -374,7 +285,7 @@ def gerar_cluster_excel(df_1):
 
 
 def gerar_grafico_cor_raca(df):
-    counts = df['corouraca'].value_counts()
+    counts = df['cor_ou_raca'].value_counts()
 
     def autopct_generator(limit):
         def inner_autopct(pct):
@@ -427,7 +338,7 @@ def gerar_grafico_forma_ingresso(df):
 
 
 def gerar_tabela_cor_forma_ingresso(df):
-    tabela = pd.crosstab(df['corouraca'], df['Forma de Ingresso'], normalize=True)
+    tabela = pd.crosstab(df['cor_ou_raca'], df['Forma de Ingresso'], normalize=True)
     tabela = tabela * 100
     tabela_formatada = tabela.style.format("{:.1f}%")
     return tabela_formatada.to_html()
@@ -440,3 +351,111 @@ def _fig_para_base64(fig):
     buf.seek(0)
     imagem_base64 = base64.b64encode(buf.read()).decode('utf-8')
     return imagem_base64
+
+
+def tratar_Coluna(df_temp):
+    
+    df_1 = df_temp
+# Renomear colunas para remover números dos nomes
+    df_1.rename(columns={
+        "1_estado_civil": "estado_civil",
+        "2_cor_ou_raca": "cor_ou_raca",
+        "3_periodo_fundamental": "periodo_fundamental",
+        "4_colegio_fundamental": "colegio_fundamental",
+        "4_situacao_superior": "situacao_superior",
+        "5_motivo_escolha_curso": "motivo_escolha_curso",
+        "6_fontes_iff": "fontes_iff",
+        "7_atividade_remunerada": "atividade_remunerada",
+        "8_renda_mensal_familia": "renda_mensal_familia",
+        "9_participacao_economia_familia": "participacao_economia_familia",
+        "10_costume_computador": "costume_computador",
+        "11_regiao_oportunidades": "regiao_oportunidades"
+    }, inplace=True)
+
+        #Criar uma coluna para armazenar a idade do canditado no ano que a inscrição foi realizada
+    df_1['idade'] = None
+
+    #Extraindo e tratando o ano de nascimento dos alunos
+    df_1['data_nascimento_candidato'] = df_1['data_nascimento_candidato'].fillna(pd.NaT)
+    df_1 = df_1[(df_1['data_nascimento_candidato'] != '-') & (df_1['data_nascimento_candidato'] != '#N/D')]
+    df_1['data_nascimento_candidato'] = pd.to_datetime(df_1['data_nascimento_candidato'], errors='coerce')
+    df_1 = df_1.dropna(subset=['data_nascimento_candidato'])
+    ano_aluno = pd.DatetimeIndex(df_1['data_nascimento_candidato'])
+    df_1['ano'] = ano_aluno.year
+
+    #Extraindo o ano do processo seletivo
+    import re
+    def extrair_ano_processo(frase):
+        ano = re.search(r'\b\d{4}\b', frase)
+        if ano:
+            return int(ano.group())  # Retorna o ano encontrado como um inteiro
+        else:
+            return None  # Retorna None se nenhum ano for encontrado
+
+
+    df_1['ano_do_processo'] = df_1['processo_seletivo'].apply(extrair_ano_processo)
+
+        #Preenchendo a idade do aluno
+    df_1['idade'] = df_1['ano_do_processo'] - df_1['ano']
+
+    #df_1 = df_1[df_1['ano_do_processo'] == 2019]
+
+    bins = [16, 20, 25, 30, 35, 40]
+    labels = ['17-20', '21-25', '26-30', '31-35', '36-40']
+    df_1['faixa_etaria'] = pd.cut(df_1['idade'], bins=bins, labels=labels, right=True)
+
+
+        # Mapear cursos para suas grandes áreas
+    mapeamentos = {
+        'Arquitetura e Urbanismo': 'CIENCIAS SOCIAIS APLICADAS',
+        'Biologia': 'CIENCIAS BIOLOGICAS',
+        'Cidades e suas Tecnologias': 'CIENCIAS SOCIAIS APLICADAS',
+        'Ciência e Tecnologia dos Alimentos': 'CIENCIAS AGRÁRIAS',
+        'CIENCIAS da Natureza': 'CIENCIAS BIOLOGICAS',
+        'Design Gráfico': 'CIENCIAS SOCIAIS APLICADAS',
+        'Educação Básica e Saberes Pedagógicos na Contemporaneidade': 'CIENCIAS HUMANAS',
+        'Educação, Ambiente e Sustentabilidade': 'CIENCIAS HUMANAS',
+        'Educação Ambiental': 'CIENCIAS HUMANAS',
+        'Educação Física': 'CIENCIAS DA SAUDE',
+        'Engenharia Ambiental': 'ENGENHARIAS',
+        'Engenharia Elétrica': 'ENGENHARIAS',
+        'Engenharia de Computação': 'ENGENHARIAS',
+        'Engenharia de Controle e Automação': 'ENGENHARIAS',
+        'Engenharia Mecânica': 'ENGENHARIAS',
+        'Física': 'CIENCIAS EXATAS E DA TERRA',
+        'Gastronomia': 'CIENCIAS SOCIAIS APLICADAS',
+        'Gestão, Design e Marketing': '',
+        'Geografia': 'CIENCIAS HUMANAS',
+        'História': 'CIENCIAS HUMANAS',
+        'Hotelaria': 'CIENCIAS HUMANAS',
+        'Letras - Português e Literaturas': 'LINGUISTICA, LETRAS E ARTES',
+        'Literatura, Memória Cultural e Sociedade': 'LINGUISTICA, LETRAS E ARTES',
+        'Manutenção Industrial': '',
+        'Matemática': 'CIENCIAS EXATAS E DA TERRA',
+        'Mestrado Profissional em Ensino e suas Tecnologias': 'CIENCIAS HUMANAS',
+        'Mestrado SAEG - Linha de Pesquisa I - Sistemas Aplicados à Engenharia': 'CIENCIAS EXATAS E DA TERRA',
+        'Mestrado SAEG - Linha de Pesquisa II - Sistemas Aplicados à Gestão': 'CIENCIAS EXATAS E DA TERRA',
+        'Práticas Educacionais na Docência do Século XXI': 'CIENCIAS HUMANAS',
+        'Pós-Graduação em Energias e Sustentabilidade': 'ENGENHARIAS',
+        'Música': 'LINGUISTICA, LETRAS E ARTES',
+        'Sistemas de Informação': 'CIENCIAS EXATAS E DA TERRA',
+        'Sistemas de Telecomunicações': 'ENGENHARIAS',
+        'Química': 'CIENCIAS EXATAS E DA TERRA',
+        'Teatro': 'LINGUISTICA, LETRAS E ARTES'
+    }
+
+    # Inicializar coluna
+    df_1['grande_area_do_curso'] = '-'
+
+    # Aplicar mapeamento
+    for curso, area in mapeamentos.items():
+        df_1.loc[df_1['nome_curso'].str.contains(curso, na=False), 'grande_area_do_curso'] = area
+
+    return df_1
+
+
+def extrair_ano_nome(nome_arquivo):
+    match = re.search(r"(20\d{2})", nome_arquivo)  # pega anos tipo 2017, 2018, 2019...
+    if match:
+        return match.group(1)
+    return None
