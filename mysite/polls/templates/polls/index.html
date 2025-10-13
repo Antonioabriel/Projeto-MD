@@ -49,28 +49,39 @@
 
             <div class="section-block">
                 <h2>Pré-processamento dos dados</h2>
-                <form method="post" enctype="multipart/form-data">
+                <form method="post" enctype="multipart/form-data" action="{% url 'selecionar_colunas' %}">
                     {% csrf_token %}
                     <div class="form-group">
-                        <label for="id_cota" class="custom-label">Selecionar Arquivo de Cotas</label>
-                        <input type="file" id="id_cota" name="cota" class="inputfile">
-                        <label for="id_cota" class="file-upload-button">Escolher arquivo de Cotas</label>
-                    </div>
-                    <div class="form-group">
-                        <label for="id_cota" class="custom-label">Selecionar Arquivo de Cotas .2</label>
-                        <input type="file" id="id_cota2" name="cota2" class="inputfile">
-                        <label for="id_cota2" class="file-upload-button">Escolher arquivo de Cotas .2</label>
-                    </div>
-
-
-                    <div class="form-group">
-                        <label for="id_superior_pesquisa" class="custom-label">Selecionar Superior Pesquisa</label>
-                        <input type="file" id="id_superior_pesquisa" name="superior_pesquisa" class="inputfile">
-                        <label for="id_superior_pesquisa" class="file-upload-button">Escolher arquivo Superior Pesquisa</label>
-                        
+                        <label for="id_arquivos" class="custom-label">Selecionar Arquivos (PDFs e CSV)</label>
+                        <input type="file" id="id_arquivos" name="arquivos" class="inputfile" multiple>
+                        <label for="id_arquivos" class="file-upload-button">Escolher arquivos</label>
                     </div>
 
                     <button type="submit">Enviar arquivos</button>
+                </form>
+
+                <h1>Selecione as colunas que deseja manter</h1>
+
+                <form method="post" action="{% url 'gerar' %}">
+                    {% csrf_token %}
+                    {% for coluna in colunas %}
+                        <div>
+                            <label>
+                                <input type="checkbox" name="colunas" value="{{ coluna }}">
+                                {{ coluna }}
+                            </label>
+                        </div>
+                    {% endfor %}
+                <h2>Selecione os anos que deseja manter</h2>
+                    {% for ano in anos %}
+                        <div>
+                            <label>
+                                <input type="checkbox" name="anos" value="{{ ano }}">
+                                {{ ano }}
+                            </label>
+                        </div>
+                    {% endfor %}
+                    <button type="submit">Gerar CSV Final</button>
                 </form>
 
                 <form action="{% url 'mesclar' %}" method="get" class="action-form">
