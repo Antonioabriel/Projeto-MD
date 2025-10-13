@@ -6,7 +6,8 @@ import numpy as np
 from sklearn.cluster import KMeans
 import matplotlib.pyplot as plt
 import base64
-
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import silhouette_score, calinski_harabasz_score, davies_bouldin_score
 
 def tratar_csv(superior_pesquisa_file,colunas_selecionadas,Ano_do_processo):
     def read_csv(file):
@@ -136,7 +137,7 @@ def tratar_csv(superior_pesquisa_file,colunas_selecionadas,Ano_do_processo):
     df_1['cidade_candidato'] = df_1['cidade_candidato'].astype(str).str.replace("'", "", regex=False)
     df_1.replace("'", "", regex=True, inplace=True)
 
-    df_1.drop(['colegio_fundamental'], axis=1, inplace=True)
+    #df_1.drop(['colegio_fundamental'], axis=1, inplace=True)
 
 
     
@@ -173,7 +174,7 @@ def tratar_csv(superior_pesquisa_file,colunas_selecionadas,Ano_do_processo):
 
     # Filtrar o DataFrame para excluir linhas com esses cursos
     df_1 = df_1[~df_1['nome_curso'].isin(cursos_para_excluir)]
-
+    print("--------------------------------------------------------")
     df_1.drop(['nome_curso'],axis=1, inplace=True)
     # Remove espaços
     df_1['Forma de Ingresso'] = df_1['Forma de Ingresso'].astype(str).str.strip()
@@ -188,8 +189,6 @@ def tratar_csv(superior_pesquisa_file,colunas_selecionadas,Ano_do_processo):
         
 
     return df_1
-
-
 
 def extrair_dados_pdf(arquivo_pdf):
     doc = fitz.open(stream=arquivo_pdf.read(), filetype="pdf")
@@ -225,64 +224,96 @@ def extrair_dados_pdf(arquivo_pdf):
             else:
                 i += 1
 
-    df = pd.DataFrame(dados, columns=['nome_curso_FI', 'Forma de Ingresso', 'numero_inscricao', 'Nota', 'Situação'])
+    df = pd.DataFrame(dados, columns=['nome_curso_FI', 'Forma de Ingresso', 'numero_inscricao', 'Nota', 'Situacao'])
     df['Nota'] = pd.to_numeric(df['Nota'], errors='coerce')
     return df
 
+def gerar_clusters(df, n_clusters=3, normalizacao="soma", tratamento_nulos="drop"):
+    df_proc = df.copy()
 
+    # Codificação de categóricas
+    df_proc = pd.get_dummies(df_proc, columns=df_proc.select_dtypes(include=['object', 'category']).columns)
 
-def gerar_cluster_excel(df_1):
-    # Converte booleanos em inteiros
-    for col in df_1.columns:
-        if df_1[col].dtype == 'bool':
-            df_1[col] = df_1[col].astype(int)
+    # Tratamento de nulos
+    if tratamento_nulos == "drop":
+        df_proc = df_proc.dropna()
+    elif tratamento_nulos == "zero":
+        df_proc = df_proc.fillna(0)
+    elif tratamento_nulos == "media":
+        df_proc = df_proc.fillna(df_proc.mean())
 
-    # Codifica variáveis categóricas
-    df_d = pd.get_dummies(df_1, columns=df_1.select_dtypes(include=['object', 'category']).columns)
-
-    # Remove colunas com soma zero (vazias)
-    df_d = df_d.loc[:, df_d.sum(axis=0) != 0]
-
-    # Normaliza
-    X = df_d.div(df_d.sum(axis=1), axis='rows')
-    
-    # Remove linhas com NaN
-    X = X.dropna()
-    df_1 = df_1.loc[X.index].copy()
+    # Normalização
+    if normalizacao == "soma":
+        X = df_proc.div(df_proc.sum(axis=1), axis=0)
+    elif normalizacao == "zscore":
+        scaler = StandardScaler()
+        X = pd.DataFrame(scaler.fit_transform(df_proc), columns=df_proc.columns, index=df_proc.index)
+    else:
+        X = df_proc
 
     # Clusterização
-    km = KMeans(n_clusters=3, max_iter=10000, n_init=100, random_state=61658)
-    X_T = km.fit_predict(X)
+    km = KMeans(n_clusters=n_clusters, max_iter=10000, n_init=100, random_state=61658)
+    clusters = km.fit_predict(X)
 
-    # Adiciona os clusters aos DataFrames
-    df_1['cluster'] = X_T
-    df_d['cluster'] = X_T
+    df["cluster"] = clusters
 
-    # Análise dos clusters
+    return df, km.inertia_  # devolve o DF clusterizado e a inércia
+
+def calcular_metricas_clusters(caminho_csv):
+    df = pd.read_csv(caminho_csv, encoding='latin1')
+
+    if "cluster" not in df.columns:
+        raise ValueError(f"O arquivo não possui a coluna 'cluster'. Colunas encontradas: {df.columns.tolist()}")
+
+    X = pd.get_dummies(df.drop(columns=['cluster'], errors='ignore'))
+    y = df['cluster']
+
+    if len(y.unique()) <= 1:
+        return {
+            "Silhouette Score": "N/A",
+            "Calinski-Harabasz": "N/A",
+            "Davies-Bouldin": "N/A",
+        }, y.value_counts().to_dict()
+
+    metricas = {
+        "Silhouette Score": silhouette_score(X, y),
+        "Calinski-Harabasz": calinski_harabasz_score(X, y),
+        "Davies-Bouldin": davies_bouldin_score(X, y),
+    }
+    return metricas, y.value_counts().to_dict()
+
+def exportar_clusters_excel(df):
+    # Monta o resumo
     linhas = []
-    for col in df_1.drop('cluster', axis=1).columns:
-        for cl in np.sort(df_1['cluster'].unique()):
-            if df_1[col].dtype == object:
-                vc = 100 * df_1[df_1.cluster == cl][col].value_counts() / (df_1.cluster == cl).sum()
+    for col in df.drop('cluster', axis=1).columns:
+        for cl in np.sort(df['cluster'].unique()):
+            if df[col].dtype == object:
+                vc = 100 * df[df.cluster == cl][col].value_counts() / (df.cluster == cl).sum()
                 for cat, cnt in vc.reset_index().values:
                     linhas.append([cl, f"{col}_{cat}", f"{cnt:.2f}%"])
             else:
-                media = df_1[df_1.cluster == cl][col].mean()
+                media = df[df.cluster == cl][col].mean()
                 linhas.append([cl, col, f"{media:.2f}"])
 
-    # Totais gerais
-    for col in df_1.drop('cluster', axis=1).columns:
-        if df_1[col].dtype == object:
-            vc = 100 * df_1[col].value_counts() / df_1.shape[0]
+    # Resumo total (All)
+    for col in df.drop('cluster', axis=1).columns:
+        if df[col].dtype == object:
+            vc = 100 * df[col].value_counts() / df.shape[0]
             for cat, cnt in vc.reset_index().values:
                 linhas.append(['All', f"{col}_{cat}", f"{cnt:.2f}%"])
         else:
-            media = df_1[col].mean()
+            media = df[col].mean()
             linhas.append(['All', col, f"{media:.2f}"])
 
-    return pd.DataFrame(linhas, columns=['cluster', 'variavel', 'valor'])
+    df_resumo = pd.DataFrame(linhas, columns=['cluster', 'variavel', 'valor'])
 
+    # Exporta somente o resumo
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine="openpyxl") as writer:
+        df_resumo.to_excel(writer, index=False, sheet_name="Resumo")
+    output.seek(0)
 
+    return output
 
 def gerar_grafico_cor_raca(df):
     counts = df['cor_ou_raca'].value_counts()
@@ -314,7 +345,6 @@ def gerar_grafico_cor_raca(df):
 
     return _fig_para_base64(fig)
 
-
 def gerar_grafico_forma_ingresso(df):
     counts = df['Forma de Ingresso'].value_counts()
 
@@ -336,13 +366,11 @@ def gerar_grafico_forma_ingresso(df):
 
     return _fig_para_base64(fig)
 
-
 def gerar_tabela_cor_forma_ingresso(df):
     tabela = pd.crosstab(df['cor_ou_raca'], df['Forma de Ingresso'], normalize=True)
     tabela = tabela * 100
     tabela_formatada = tabela.style.format("{:.1f}%")
     return tabela_formatada.to_html()
-
 
 def _fig_para_base64(fig):
     buf = io.BytesIO()
@@ -351,7 +379,6 @@ def _fig_para_base64(fig):
     buf.seek(0)
     imagem_base64 = base64.b64encode(buf.read()).decode('utf-8')
     return imagem_base64
-
 
 def tratar_Coluna(df_temp):
     
@@ -446,13 +473,14 @@ def tratar_Coluna(df_temp):
 
     # Inicializar coluna
     df_1['grande_area_do_curso'] = '-'
+    df_1['morador_de_campos'] = '-'
+    df_1['escola_publica'] = '-'
 
     # Aplicar mapeamento
     for curso, area in mapeamentos.items():
         df_1.loc[df_1['nome_curso'].str.contains(curso, na=False), 'grande_area_do_curso'] = area
 
     return df_1
-
 
 def extrair_ano_nome(nome_arquivo):
     match = re.search(r"(20\d{2})", nome_arquivo)  # pega anos tipo 2017, 2018, 2019...

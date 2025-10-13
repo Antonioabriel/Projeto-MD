@@ -47,7 +47,7 @@
 
             <div class="section-block">
                 <h2>Pré-processamento dos dados</h2>
-                <form method="post" enctype="multipart/form-data" action="{% url 'selecionar_colunas' %}">
+                <form method="post" enctype="multipart/form-data" action="{% url 'upload_armazenar' %}">
                     {% csrf_token %}
                     <div class="form-group">
                         <label for="id_arquivos" class="custom-label">Selecionar Arquivos (PDFs e CSV)</label>
@@ -58,32 +58,13 @@
                     <button type="submit">Enviar arquivos</button>
                 </form>
 
-                <h1>Selecione as colunas que deseja manter</h1>
+                {% if mensagem %}
+                    <p style="color: green;">{{ mensagem }}</p>
+                {% endif %}
 
-                <form method="post" action="{% url 'gerar' %}">
-                    {% csrf_token %}
-                    {% for coluna in colunas %}
-                        <div>
-                            <label>
-                                <input type="checkbox" name="colunas" value="{{ coluna }}">
-                                {{ coluna }}
-                            </label>
-                        </div>
-                    {% endfor %}
-                <h2>Selecione os anos que deseja manter</h2>
-                    {% for ano in anos %}
-                        <div>
-                            <label>
-                                <input type="checkbox" name="anos" value="{{ ano }}">
-                                {{ ano }}
-                            </label>
-                        </div>
-                    {% endfor %}
-                    <button type="submit">Gerar CSV Final</button>
-                </form>
 
-                <form action="{% url 'mesclar' %}" method="get" class="action-form">
-                    <button type="submit">Extrair dados do edital de Homologação</button>
+                <form action="{% url 'analise' %}" method="get" class="action-form">
+                    <button type="submit">Analise Estatistica</button>
                 </form>
             </div><div class="section-block">
                 <h2>Mineração de dados</h2>
@@ -91,34 +72,10 @@
                     <button type="submit">Clusterização</button>
                 </form>
 
-        <h1>Visualização de Gráficos</h1>
-
-        <div class="botoes">
-            <form method="get" action="{% url 'gerar_grafico' %}">
-                <input type="hidden" name="grafico" value="cor_raca">
-                <button type="submit">Gráfico: Cor ou Raça</button>
-            </form>
-
-            <form method="get" action="{% url 'gerar_grafico' %}">
-                <input type="hidden" name="grafico" value="forma_ingresso">
-                <button type="submit">Gráfico: Forma de Ingresso</button>
-            </form>
-
-            <form method="get" action="{% url 'gerar_grafico' %}">
-                <input type="hidden" name="grafico" value="tabela_cor_ingresso">
-                <button type="submit">Tabela: Cor x Forma de Ingresso</button>
-            </form>
+    <form action="{% url 'index' %}" method="get" style="margin-top: 20px;">
+        <button type="submit">Apagar dados</button>
+    </form>
         </div>
-
-        {% if imagem %}
-            <img src="data:image/png;base64,{{ imagem }}" alt="Gráfico">
-        {% endif %}
-
-        {% if tabela_html %}
-            <div class="tabela-container">
-                {{ tabela_html|safe }}
-            </div>
-        {% endif %}
-            </div></div></div>
+    </div>
 </body>
 </html>
