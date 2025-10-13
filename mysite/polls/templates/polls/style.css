@@ -17,7 +17,7 @@ html {
 body {
     font-family: 'Roboto', 'Helvetica Neue', Arial, sans-serif;
     margin: 0;
-    padding: 30px;
+    padding: 10px;
     background-color: #F5F5F5;
     color: #3c4043; /* Cor do texto padrão do site agora é CINZA ESCURO */
     line-height: 1.6;
@@ -69,6 +69,7 @@ h1 {
     font-size: 2.2rem;
     letter-spacing: -0.5px;
     font-weight: 700;
+    text-align: center;
 }
 
 h2 {
@@ -323,4 +324,93 @@ form[action*="clusters"] button:hover {
         margin-top: 0;
         margin-bottom: 10px;
     }
+    .btn-secondary {
+        background-color: #6c757d; /* Um cinza neutro */
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
+
+    .btn-secondary:hover {
+        background-color: #5a6268;
+        transform: translateY(-2px);
+}
+
+/* Estilo para a mensagem de feedback (sucesso/erro) */
+    .feedback-message {
+        margin-top: 15px;
+        padding: 10px 15px;
+        border-radius: 5px;
+        background-color: #f8f9fa; /* Fundo cinza claro */
+        border: 1px solid #e0e0e0;
+        color: #3c4043;
+        text-align: center;
+        font-weight: 500;
+} 
+}
+nav {
+background-color: #006633; /* Cor de fundo verde do IFF */
+
+padding: 15px; /* Espaçamento interno para a barra não ficar colada nos links */
+
+text-align: center; /* Centraliza os links dentro da barra */
+
+border-radius: 8px; /* Cantos arredondados */
+
+box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Sombra suave para dar profundidade */
+margin-bottom: 30px; /* Espaço abaixo da barra de navegação */
+
+}
+
+
+
+nav a {
+
+color: white; /* Cor do texto dos links */
+text-decoration: none; /* Remove o sublinhado padrão dos links */
+font-family: 'Roboto', Arial, sans-serif; /* Garante a fonte correta */
+font-size: 1.1rem;/* Tamanho do texto */
+font-weight: 600; /* Deixa o texto em negrito (bold) */
+padding: 10px 20px; /* Espaçamento interno dos links, para torná-los "clicáveis" */
+ margin: 0 5px;/* Pequeno espaço entre cada link */
+ border-radius: 5px;  /* Cantos arredondados para cada link */
+transition: background-color 0.3s ease; /* Efeito suave na mudança de cor */
+
+}
+
+
+
+/* Efeito ao passar o mouse sobre um link */
+
+nav a:hover {
+ background-color: #004d26; /* Um tom de verde um pouco mais escuro */
+color: #FFFFFF;  /* Mantém a cor do texto branca */
+
+}
+
+footer {
+
+text-align: center;
+
+padding: 25px;
+
+ margin-top: 50px; /* Aumenta o espaço acima do footer */
+
+ background-color: #f8f9fa; /* Usa o cinza claro dos formulários */
+
+border-top: 1px solid #e0e0e0; /* Borda sutil no topo */
+
+ border-radius: 8px; /* Cantos arredondados */
+
+}
+
+
+
+footer p {
+
+ margin: 0;
+
+color: #5f6368; /* Cor de texto mais suave */
+
+ font-size: 0.95rem;
+
+}
+

@@ -40,8 +40,10 @@
     </style>
 </head>
 <body>
+      {% include "navbar.html" %}
+
     <div class="container">
-        <h1>Sistema de Mineração de Dados Educacionais</h1>
+       <h1>Sistema de Mineração de Dados Educacionais</h1>
 
         <div class="main-sections-wrapper">
 
@@ -66,7 +68,8 @@
                 <form action="{% url 'analise' %}" method="get" class="action-form">
                     <button type="submit">Analise Estatistica</button>
                 </form>
-            </div><div class="section-block">
+            </div>
+            <div class="section-block">
                 <h2>Mineração de dados</h2>
                 <form action="{% url 'clusters' %}" method="get" class="action-form">
                     <button type="submit">Clusterização</button>
