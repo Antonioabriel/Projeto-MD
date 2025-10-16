@@ -3,31 +3,53 @@
 <head>
     <meta charset="utf-8">
     <title>Upload CSV</title>
-    <link rel="stylesheet" type="text/css" href="style.css">
 </head>
 <body>
-    <div class="container">
-        <h1>Clusterização</h1>
-    <div class="section-block">
-        <form  method="post" enctype="multipart/form-data">
-            <div class="form-group">
-            {% csrf_token %}
-            <label class="custom-label">Arquivo para clusterização:</label><br>
-                <input class="inputfile" type="file" name="arquivo_cluster" id="arquivo_cluster" required>
-                <label for="arquivo_cluster" class="file-upload-button">Escolher arquivo </label>
+    <h2>Clusterização</h2>
+    <form method="post">
+        {% csrf_token %}
+        
+        <label for="n_clusters">Número de clusters:</label><br>
+        <input type="number" name="n_clusters" id="n_clusters" value="3" min="2" required><br><br>
+
+        <h3>Selecione as colunas para clusterização</h3>
+        {% for coluna in colunas %}
+            <div>
+                <label>
+                    <input type="checkbox" name="colunas" value="{{ coluna }}">
+                    {{ coluna }}
+                </label>
             </div>
-            <button type="submit">Enviar</button>
-        </form>
-        
-        {% if mensagem %}
+        {% endfor %}
+        <br>
+
+        <label for="normalizacao">Método de Normalização:</label><br>
+        <select name="normalizacao" id="normalizacao">
+            <option value="soma">Dividir pela soma (atual)</option>
+            <option value="zscore">Z-Score</option>
+            <option value="nenhuma">Nenhuma</option>
+        </select><br><br>
+
+        <label for="nulos">Tratamento de valores nulos:</label><br>
+        <select name="nulos" id="nulos">
+            <option value="drop">Descartar linhas com NaN</option>
+            <option value="zero">Preencher com 0</option>
+            <option value="media">Preencher com média</option>
+        </select><br><br>
+
+        <button type="submit">Executar Clusterização</button>
+    </form>
+
+    {% if mensagem %}
         <p>{{ mensagem }}</p>
-        {% endif %}
-        
-        <form action="{% url 'index' %}" method="get" style="margin-top: 20px;">
-            <button type="submit">Voltar</button>
-        </form>
-        
-    </div>
-</div>
+    {% endif %}
+
+    <form action="{% url 'index_sem_limpar' %}" method="get" style="margin-top: 20px;">
+        <button type="submit">Voltar</button>
+    </form>
+        <form action="{% url 'analise_clusters' %}" method="get" style="margin-top: 20px;">
+        <button type="submit">analise_clusters</button>
+    </form>
 </body>
+
 </html>

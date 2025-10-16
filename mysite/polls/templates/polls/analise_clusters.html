@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Análise de Clusters</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        table { border-collapse: collapse; width: 50%; margin-top: 20px; }
+        th, td { border: 1px solid #aaa; padding: 8px; text-align: center; }
+    </style>
+</head>
+<body>
+    <h1>Análise de Clusters</h1>
+
+    <h2>Métricas de Avaliação</h2>
+    <table>
+        <tr><th>Métrica</th><th>Valor</th></tr>
+        {% for nome, valor in metricas.items %}
+        <tr>
+            <td>{{ nome }}</td>
+            <td>{{ valor }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <h2>Distribuição dos Clusters</h2>
+    <table>
+        <tr><th>Cluster</th><th>Quantidade</th></tr>
+        {% for cluster, qtd in clusters.items %}
+        <tr>
+            <td>{{ cluster }}</td>
+            <td>{{ qtd }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <form action="{% url 'index_sem_limpar' %}" method="get" style="margin-top: 20px;">
+        <button type="submit">Voltar</button>
+    </form>
+    <form action="{% url 'baixar_clusters_excel' %}" method="get" style="margin-top: 15px;">
+        <button type="submit">Baixar Excel</button>
+    </form>
+</body>
+</html>

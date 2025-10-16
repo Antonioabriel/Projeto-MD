@@ -1,92 +1,164 @@
 import pandas as pd
-import io, os
+import io, os, re, json,shutil
 from django.shortcuts import render
 from django.http import HttpResponse
 from .forms import UploadFileForm
-from .process import tratar_csv,extrair_dados_pdf,gerar_cluster_excel,gerar_grafico_cor_raca,gerar_tabela_cor_forma_ingresso,gerar_grafico_forma_ingresso,tratar_Coluna,extrair_ano_nome
-from openpyxl import Workbook
+from .process import calcular_metricas_clusters, exportar_clusters_excel, gerar_clusters, tratar_csv,extrair_dados_pdf,gerar_grafico_cor_raca,gerar_tabela_cor_forma_ingresso,gerar_grafico_forma_ingresso,tratar_Coluna,extrair_ano_nome
 from io import BytesIO
 from django.conf import settings
+from django.utils import timezone
+
 
 
 def index(request):
     form = UploadFileForm()
+    temp_dir = os.path.join(settings.MEDIA_ROOT, 'temp')
+
+    if os.path.exists(temp_dir):
+        shutil.rmtree(temp_dir)
+    os.makedirs(temp_dir, exist_ok=True)
     return render(request, 'polls/index.html', {'form': form})
 
-def selecionar_colunas(request):
-    if request.method == 'POST':
+def index_sem_limpar(request):
+    form = UploadFileForm()
+    return render(request, 'polls/index.html', {'form': form})
+
+def upload_armazenar(request):
+    if request.method != 'POST':
+        return render(request, 'polls/index.html', {'form': UploadFileForm()})
+
+    arquivos = request.FILES.getlist('arquivos')
+    if not arquivos:
+        return render(request, 'polls/index.html', {
+            'form': UploadFileForm(),
+            'mensagem': 'Nenhum arquivo enviado.'
+        })
+
+    temp_dir = os.path.join(settings.MEDIA_ROOT, 'temp')
+    os.makedirs(temp_dir, exist_ok=True)
+
+    meta_path = os.path.join(temp_dir, 'uploads_meta.json')
+    meta = {'pdfs': [], 'csvs': [], 'outros': []}
+    if os.path.exists(meta_path):
         try:
-            arquivos = request.FILES.getlist("arquivos")  # vários arquivos de uma vez
-            print("Arquivos recebidos:", [a.name for a in arquivos])
-            dfs_pdf = []
-            df_superior = None
-            anos = set()
+            with open(meta_path, 'r', encoding='utf-8') as f:
+                meta = json.load(f)
+        except Exception:
+            pass  # se der erro, recomeça um novo meta
 
-            for arquivo in arquivos:
-                nome = arquivo.name.lower()
+    salvos = []
+    for arquivo in arquivos:
+        original = arquivo.name
+        base, ext = os.path.splitext(original)
+        ext = ext.lower()
 
-                # pega ano pelo nome
-                ano = extrair_ano_nome(arquivo.name)
-                if ano:
-                    anos.add(ano)
+        safe_base = re.sub(r'[^A-Za-z0-9._-]+', '_', base)[:100]
+        unique_name = f"{safe_base}__{timezone.now().strftime('%Y%m%d%H%M%S%f')}{ext}"
+        dest_path = os.path.join(temp_dir, unique_name)
 
-                if nome.endswith(".pdf"):
-                    # Extrai dados dos PDFs
-                    df_pdf = extrair_dados_pdf(arquivo)
-                    df_pdf["numero_inscricao"] = df_pdf["numero_inscricao"].astype(str)
-                    dfs_pdf.append(df_pdf)
+        with open(dest_path, 'wb+') as out:
+            for chunk in arquivo.chunks():
+                out.write(chunk)
 
-                elif nome.endswith(".csv"):
-                    # Lê o CSV (superior pesquisa)
-                    try:
-                        df_superior = pd.read_csv(io.TextIOWrapper(arquivo.file, encoding="utf-8"))
-                    except UnicodeDecodeError:
-                        arquivo.seek(0)
-                        df_superior = pd.read_csv(io.TextIOWrapper(arquivo.file, encoding="latin1"))
-                    df_superior["numero_inscricao"] = df_superior["numero_inscricao"].astype(str)
+        entry = {"nome_original": original, "arquivo": unique_name}
 
-            # Junta todos os PDFs em um só
-            df_cota = pd.concat(dfs_pdf, ignore_index=True) if dfs_pdf else pd.DataFrame()
+        if ext == '.pdf':
+            # use sua função se preferir: ano = extrair_ano_nome(original)
+            meta['pdfs'].append(entry)
+        elif ext == '.csv':
+            meta['csvs'].append(entry)
+        else:
+            meta['outros'].append(entry)
 
-            # Faz merge com o CSV
-            if df_superior is not None and not df_cota.empty:
-                df_temp = df_superior.merge(df_cota, on="numero_inscricao", how="left")
-            else:
-                df_temp = df_superior if df_superior is not None else df_cota
+        salvos.append(entry)
 
-            # Pequeno pré-processamento de nomes de colunas (se tiver função sua)
-            df_temp = tratar_Coluna(df_temp)
-            print("Colunas do df_temp:", df_temp.columns.tolist())
+    with open(meta_path, 'w', encoding='utf-8') as f:
+        json.dump(meta, f, ensure_ascii=False, indent=2)
 
-            # Garante que a pasta temp exista
-            temp_dir = os.path.join(settings.MEDIA_ROOT, 'temp')
-            os.makedirs(temp_dir, exist_ok=True)
+    print("Arquivos armazenados:", [e['arquivo'] for e in salvos])  # debug no console
 
-            # Salva o DataFrame bruto temporário
-            temp_path = os.path.join(temp_dir, 'df_bruto.csv')
-            df_temp.to_csv(temp_path, index=False, encoding='utf-8')
+    return render(request, 'polls/index.html', {
+        'form': UploadFileForm(),
+        'mensagem': f'{len(salvos)} arquivo(s) armazenado(s) com sucesso.',
+        'arquivos_salvos': salvos,   # opcional para listar no template
+    })
 
-            # Lista de colunas e anos
-            colunas = df_temp.columns.tolist()
-            anos_disponiveis = sorted(list(anos))
+def listar_colunas_anos(request):
+    try:
+        print("Entramos no Listar colunas ")
+        temp_dir = os.path.join(settings.MEDIA_ROOT, 'temp')
+        arquivos = os.listdir(temp_dir)  # pega tudo que já foi salvo
+        print(f"[DEBUG] lidos {len(arquivos)} arquivos em {temp_dir}: {arquivos}")
+        dfs_pdf = []
+        df_superior = None
+        anos = set()
 
-            return render(request, 'polls/index.html', {
-                'colunas': colunas,
-                'anos': anos_disponiveis
-            })
+        for nome_arquivo in arquivos:
+            caminho = os.path.join(temp_dir, nome_arquivo)
 
-        except Exception as e:
-            return HttpResponse(f"Erro ao processar os arquivos: {str(e)}", status=400)
 
-    return render(request, 'polls/index.html', {'form': UploadFileForm()})
+
+            if nome_arquivo.lower().endswith(".pdf"):
+                try:
+                    ano = extrair_ano_nome(nome_arquivo)
+                    if ano:
+                        anos.add(ano)
+                except Exception as e:
+                    print(f"[DEBUG] extrair_ano_nome falhou para {nome_arquivo}: {e}")
+
+                print(f"[DEBUG] LENDO PDF: {nome_arquivo}")
+                # Extrai dados do PDF já salvo
+                with open(caminho, "rb") as f:
+                    df_pdf = extrair_dados_pdf(f)
+                if df_pdf is None or df_pdf.empty:
+                    print(f"[DEBUG] PDF vazio/None: {nome_arquivo}")
+                    continue
+
+                
+                df_pdf["numero_inscricao"] = df_pdf["numero_inscricao"].astype(str)
+                dfs_pdf.append(df_pdf)
+
+            elif nome_arquivo.lower().endswith(".csv"):
+                print(f"[DEBUG] LENDO CSV: {nome_arquivo}")
+                # Lê o CSV
+                try:
+                    df_superior = pd.read_csv(caminho, encoding="utf-8")
+                except UnicodeDecodeError:
+                    df_superior = pd.read_csv(caminho, encoding="latin1")
+                df_superior["numero_inscricao"] = df_superior["numero_inscricao"].astype(str)
+
+        # Junta PDFs
+        df_cota = pd.concat(dfs_pdf, ignore_index=True) if dfs_pdf else pd.DataFrame()
+
+        # Merge com CSV
+        if df_superior is not None and not df_cota.empty:
+            df_temp = df_superior.merge(df_cota, on="numero_inscricao", how="left")
+        else:
+            df_temp = df_superior if df_superior is not None else df_cota
+
+        # Tratamento das colunas
+        df_temp = tratar_Coluna(df_temp)
+
+        df_bruto_path = os.path.join(temp_dir, "df_bruto.csv")
+        df_temp.to_csv(df_bruto_path, index=False, encoding="utf-8")
+        print(f"[DEBUG] df_bruto salvo em {df_bruto_path} | shape={df_temp.shape}")
+
+        # Colunas e anos disponíveis
+        colunas = df_temp.columns.tolist()
+        anos_disponiveis = sorted(list(anos))
+
+        return render(request, "polls/analiseEstatistica.html", {
+            "colunas": colunas,
+            "anos": anos_disponiveis
+        })
+
+    except Exception as e:
+        return HttpResponse(f"Erro ao listar colunas e anos: {str(e)}", status=400)
 
 def gerar(request):
-    print("Método recebido:", request.method)
-    print("Dados recebidos:", request.POST)  # DEBUG
-
     if request.method == 'POST':
-        colunas_selecionadas = request.POST.getlist('colunas')  # colunas escolhidas pelo usuário
-        Ano_do_processo = request.POST.getlist('anos')
+        colunas_selecionadas = request.POST.getlist('colunas')
+        anos_selecionados = request.POST.getlist('anos')
 
         try:
             temp_dir = os.path.join(settings.MEDIA_ROOT, 'temp')
@@ -95,40 +167,37 @@ def gerar(request):
             # Carrega o bruto
             df_bruto = pd.read_csv(df_bruto_path, encoding='latin1')
 
-            # Aplica o tratamento usando só as colunas escolhidas
-            resultado = tratar_csv(df_bruto, colunas_selecionadas,Ano_do_processo)
+            # Aplica o tratamento
+            resultado = tratar_csv(df_bruto, colunas_selecionadas, anos_selecionados)
 
             # Salva o resultado tratado
             resultado_path = os.path.join(temp_dir, 'resultado.csv')
             resultado.to_csv(resultado_path, index=False, encoding='latin1')
 
-            # Remove o bruto
-            if os.path.exists(df_bruto_path):
-                os.remove(df_bruto_path)
-
-            # Retorna para download
-            output = io.BytesIO()
-            resultado.to_csv(output, index=False, encoding='latin1')
-            output.seek(0)
-
-            response = HttpResponse(
-                output.getvalue(),
-                content_type='text/csv; charset=latin1'
-            )
-            response['Content-Disposition'] = 'attachment; filename="resultado.csv"'
-            return response
-
+            # ⚠️ Não devolve download aqui, só confirma
+            return render(request, 'polls/analiseEstatistica.html', {
+                'mensagem': "Filtros aplicados com sucesso! Agora você pode baixar o CSV."
+            })
 
         except Exception as e:
             return HttpResponse(f"Erro ao processar os arquivos: {str(e)}", status=400)
 
-    # se for GET, volta pro index
     return render(request, 'polls/index.html', {'form': UploadFileForm()})
 
+def baixar_resultado(request):
+    temp_dir = os.path.join(settings.MEDIA_ROOT, 'temp')
+    resultado_path = os.path.join(temp_dir, 'resultado.csv')
 
-def mesclar(request):
-    return render(request, 'polls/mesclar.html')
+    if not os.path.exists(resultado_path):
+        return HttpResponse("Nenhum resultado encontrado. Gere o CSV primeiro.", status=404)
 
+    with open(resultado_path, 'rb') as f:
+        response = HttpResponse(f.read(), content_type='text/csv; charset=latin1')
+        response['Content-Disposition'] = 'attachment; filename="resultado.csv"'
+        return response
+
+def analiseEstatistica(request):
+    return render(request, 'polls/analiseEstatistica.html')
 
 def processar_mesclagem(request):
     if request.method == 'POST' and request.FILES.get('arquivo_mesclar'):
@@ -143,40 +212,74 @@ def processar_mesclagem(request):
             return render(request, 'polls/mesclar.html', {'mensagem': f'Erro ao processar o PDF: {str(e)}'})
     return render(request, 'polls/mesclar.html')
 
-
 def clusters_view(request):
-    if request.method == 'POST' and request.FILES.get('arquivo_cluster'):
-        arquivo = request.FILES['arquivo_cluster']
+    temp_path = os.path.join(settings.MEDIA_ROOT, "temp", "resultado.csv")
+    temp_cluster_path = os.path.join(settings.MEDIA_ROOT, "temp", "clusters_features.csv")
+
+    if not os.path.exists(temp_path):
+        return render(request, "polls/clusters.html", {"mensagem": "Nenhum dado encontrado. Gere o CSV primeiro."})
+
+    df = pd.read_csv(temp_path, encoding="latin1")
+
+    if request.method == "POST":
         try:
-            try:
-                df = pd.read_csv(io.TextIOWrapper(arquivo, encoding='utf-8'))
-            except UnicodeDecodeError:
-                arquivo.seek(0)
-                df = pd.read_csv(io.TextIOWrapper(arquivo, encoding='latin1'))
+            n_clusters = int(request.POST.get("n_clusters", 3))
+            colunas = request.POST.getlist("colunas")
+            metodo_norm = request.POST.get("normalizacao", "soma")
+            tratamento_nulos = request.POST.get("nulos", "drop")
 
+            if colunas:
+                df = df[colunas]
 
-            # Aqui você já deve ter a coluna 'cluster' no DataFrame.
-            # Se não tiver, adicione sua lógica de clusterização antes.
+            # --- gera clusters ---
+            df_clusterizado, inercia = gerar_clusters(df, n_clusters, metodo_norm, tratamento_nulos)
 
-            df_resultado = gerar_cluster_excel(df)
+            # --- salva no temp ---
+            df_clusterizado.to_csv(temp_cluster_path, index=False, encoding="latin1")
 
-            # Gerar Excel
-
-
-            output = BytesIO()
-            with pd.ExcelWriter(output, engine='openpyxl') as writer:
-                df_resultado.to_excel(writer, index=False, sheet_name='Clusters')
-
-            output.seek(0)
-            response = HttpResponse(output, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-            response['Content-Disposition'] = 'attachment; filename="clusters.xlsx"'
-            return response
+            return render(request, "polls/clusters.html", {
+                "mensagem": f"Clusters gerados com sucesso! Inércia: {inercia:.2f}",
+                "colunas": df.columns.tolist()
+            })
 
         except Exception as e:
-            return render(request, 'polls/clusters.html', {'mensagem': f'Erro: {str(e)}'})
+            return render(request, "polls/clusters.html", {"mensagem": f"Erro: {str(e)}"})
 
-    return render(request, 'polls/clusters.html')
+    return render(request, "polls/clusters.html", {"colunas": df.columns.tolist()})
 
+
+def baixar_clusters_excel(request):
+    temp_cluster_path = os.path.join(settings.MEDIA_ROOT, "temp", "clusters_features.csv")
+
+    if not os.path.exists(temp_cluster_path):
+        return HttpResponse("Nenhum cluster disponível. Gere os clusters primeiro.", status=404)
+
+    df = pd.read_csv(temp_cluster_path, encoding="latin1")
+    output = exportar_clusters_excel(df)
+
+    response = HttpResponse(
+        output,
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+    response["Content-Disposition"] = 'attachment; filename="clusters.xlsx"'
+    return response
+
+
+def analise_clusters(request):
+    try:
+        caminho = os.path.join(settings.MEDIA_ROOT, 'temp', 'clusters_features.csv')
+        if not os.path.exists(caminho):
+            return HttpResponse("Arquivo de features não encontrado. Execute a clusterização primeiro.", status=404)
+
+        metricas, clusters = calcular_metricas_clusters(caminho)
+
+        return render(request, "polls/analise_clusters.html", {
+            "metricas": metricas,
+            "clusters": clusters
+        })
+
+    except Exception as e:
+        return HttpResponse(f"Erro na análise de clusters: {str(e)}", status=400)
 
 def gerar_grafico_view(request):
     caminho = os.path.join(settings.MEDIA_ROOT, 'temp', 'resultado.csv')
@@ -190,15 +293,15 @@ def gerar_grafico_view(request):
 
     if acao == 'cor_raca':
         imagem_base64 = gerar_grafico_cor_raca(df)
-        return render(request, 'polls/index.html', {'imagem': imagem_base64})
+        return render(request, 'polls/analiseEstatistica.html', {'imagem': imagem_base64})
 
     elif acao == 'forma_ingresso':
         imagem_base64 = gerar_grafico_forma_ingresso(df)
-        return render(request, 'polls/index.html', {'imagem': imagem_base64})
+        return render(request, 'polls/analiseEstatistica.html', {'imagem': imagem_base64})
 
     elif acao == 'tabela_cor_ingresso':
         tabela_html = gerar_tabela_cor_forma_ingresso(df)
-        return render(request, 'polls/index.html', {'tabela_html': tabela_html})
+        return render(request, 'polls/analiseEstatistica.html', {'tabela_html': tabela_html})
 
     else:
         return HttpResponse("Gráfico não reconhecido.", status=400)
