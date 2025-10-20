@@ -3,17 +3,26 @@
 <head>
     <meta charset="utf-8">
     <title>Upload CSV</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
 </head>
 <body>
+    <div class="container">
+
     <form action="{% url 'index_sem_limpar' %}" method="get" style="margin-top: 20px;">
         <button type="submit">Voltar</button>
     </form>
+    <h1>Análise e Filtragem de Dados</h1>
+        <div class="main-sections-wrapper">
+            <div class="section-block">
+                <h2>Filtros e Ações</h2>
                 <form method="post" enctype="multipart/form-data" action="{% url 'listar_colunas_anos' %}">
                     {% csrf_token %}
                     <button type="submit">Listar colunas</button>
                 </form>
 
-                <h1>Selecione as colunas que deseja manter</h1>
+
+                <div class="filter-group">
+                <h3>Selecione as colunas que deseja manter</h3>
 
                 <form method="post" action="{% url 'gerar' %}">
                     {% csrf_token %}
@@ -25,7 +34,9 @@
                             </label>
                         </div>
                     {% endfor %}
+                    </div>
                 <p>------------------------------------------------------</p>
+                <div class="filter-group">
                 <h2>Selecione os anos que deseja manter</h2>
                     {% for ano in anos %}
                         <div>

@@ -3,6 +3,7 @@
 <head>
     <meta charset="utf-8">
     <title>Análise de Clusters</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; }
         table { border-collapse: collapse; width: 50%; margin-top: 20px; }
@@ -10,10 +11,13 @@
     </style>
 </head>
 <body>
+    <div class="container">
     <h1>Análise de Clusters</h1>
-
+    
+    <div class="main-sections-wrapper">
+        <div class="section-block">
     <h2>Métricas de Avaliação</h2>
-    <table>
+    <table class="table-metrics">
         <tr><th>Métrica</th><th>Valor</th></tr>
         {% for nome, valor in metricas.items %}
         <tr>
@@ -24,7 +28,7 @@
     </table>
 
     <h2>Distribuição dos Clusters</h2>
-    <table>
+    <table class="table-metrics">
         <tr><th>Cluster</th><th>Quantidade</th></tr>
         {% for cluster, qtd in clusters.items %}
         <tr>
@@ -33,12 +37,17 @@
         </tr>
         {% endfor %}
     </table>
-
-    <form action="{% url 'index_sem_limpar' %}" method="get" style="margin-top: 20px;">
+    <div class="botoes" style="margin-top: 30px; justify-content: center;">
+        <form action="{% url 'index_sem_limpar' %}" method="get" style="margin-top: 20px;">
         <button type="submit">Voltar</button>
     </form>
     <form action="{% url 'baixar_clusters_excel' %}" method="get" style="margin-top: 15px;">
         <button type="submit">Baixar Excel</button>
+        </div>
     </form>
+    </div>
+        </div> 
+            </div> 
+                </div>
 </body>
 </html>
